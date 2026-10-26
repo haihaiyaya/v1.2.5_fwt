@@ -1,0 +1,1215 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>云居伴旅 · 小程序交互原型</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='6' fill='%230F7B6C'/%3E%3Cpath d='M6.5 15.5a6.5 6.5 0 0 1 11 0M9 18.5a3 3 0 0 1 6 0' stroke='%23fff' stroke-width='1.6' fill='none' stroke-linecap='round'/%3E%3Ccircle cx='12' cy='12' r='1.2' fill='%23F0A33B'/%3E%3C/svg%3E">
+<style>
+/* ============ 设计令牌 ============ */
+:root{
+  --ink:#18211E; --ink-2:#5A6661; --ink-3:#8B9591;
+  --teal:#0F7B6C; --teal-600:#0B6457; --teal-700:#085247; --teal-100:#E1F1ED; --teal-50:#F0F8F6;
+  --amber:#F0A33B; --amber-100:#FCEEDC; --amber-600:#D98A1F;
+  --bg:#F2F4F3; --card:#FFFFFF; --line:#E4E9E7;
+  --red:#E5484D; --red-100:#FDEBEC;
+  --blue:#2B6FE8; --blue-100:#E9F0FE;
+  --radius:14px; --shadow:0 1px 2px rgba(24,33,30,.05),0 8px 24px -12px rgba(24,33,30,.12);
+  --font:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei","Segoe UI",sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{font-family:var(--font);color:var(--ink);background:#0E1714;font-size:14px;line-height:1.55}
+button{font-family:inherit;border:none;background:none;cursor:pointer;color:inherit}
+input,select,textarea{font-family:inherit;font-size:16px;color:var(--ink)}
+img{display:block;max-width:100%}
+svg.ic{width:1em;height:1em;flex:none}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+
+/* ============ 桌面工作台 ============ */
+.stage{min-height:100%;display:flex;flex-direction:column;
+  background:radial-gradient(1200px 600px at 20% -10%,#16352E 0%,#0E1714 55%),#0E1714;}
+.topbar{display:flex;align-items:center;gap:14px;padding:16px 28px;color:#C9D6D1;}
+.topbar .brand{display:flex;align-items:center;gap:10px;font-size:17px;font-weight:700;color:#fff;letter-spacing:.5px}
+.topbar .brand .mark{width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,var(--teal),#17A390);display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px}
+.topbar .brand small{font-weight:500;font-size:12px;color:#8FB0A7}
+.topbar .spacer{flex:1}
+.topbar .tool-btn{display:inline-flex;align-items:center;gap:7px;padding:8px 14px;border-radius:999px;border:1px solid #2A4740;color:#D7E4E0;font-size:13px;transition:.15s}
+.topbar .tool-btn:hover{background:#17302A;border-color:#3A5C53}
+.topbar .tool-btn.primary{background:var(--teal);border-color:var(--teal);color:#fff}
+.topbar .tool-btn.primary:hover{background:var(--teal-600)}
+.workspace{flex:1;display:flex;gap:36px;justify-content:center;align-items:flex-start;padding:18px 28px 40px}
+
+/* ============ 手机壳 ============ */
+.phone-wrap{flex:none;padding-top:6px}
+.phone{width:390px;height:822px;background:#0B0F0E;border-radius:46px;padding:12px;box-shadow:0 40px 90px -30px rgba(0,0,0,.7),0 0 0 1px #2A3A35;position:relative}
+.phone .inner{position:relative;width:100%;height:100%;background:var(--bg);border-radius:36px;overflow:hidden}
+.screen{position:absolute;inset:0;overflow:hidden;display:flex;flex-direction:column}
+.view{position:relative;flex:1;min-height:0;display:none;flex-direction:column;background:var(--bg);overflow:hidden}
+.view.active{display:flex}
+.view-scroll{flex:1;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.view-scroll::-webkit-scrollbar{display:none}
+.statusbar{height:44px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 22px;font-size:13px;font-weight:600;color:var(--ink);position:relative;z-index:5}
+.statusbar .sb-group{display:flex;align-items:center;gap:5px}
+.statusbar svg.ic{font-size:15px}
+.sb-dynamic{position:absolute;right:18px;top:6px;width:96px;height:26px;background:#0B0F0E;border-radius:14px;z-index:-1}
+.ph-header{flex:none;display:flex;align-items:center;gap:6px;padding:2px 12px 10px;position:relative}
+.ph-header .back{width:38px;height:38px;display:flex;align-items:center;justify-content:center;font-size:20px;color:var(--ink);border-radius:50%}
+.ph-header .back:active{background:var(--line)}
+.ph-header h2{font-size:17px;font-weight:700;flex:1}
+.ph-header .menu{width:38px;height:38px;display:flex;align-items:center;justify-content:center;font-size:20px;color:var(--ink-2)}
+.ph-header .sub{position:absolute;left:56px;top:40px;font-size:12px;color:var(--ink-3);font-weight:400}
+
+/* 底部导航 */
+.bottom-nav{flex:none;height:64px;display:grid;grid-template-columns:repeat(3,1fr);background:#FBFCFB;border-top:1px solid var(--line);padding-bottom:8px}
+.bottom-nav .bn-item{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:10.5px;color:var(--ink-3)}
+.bottom-nav .bn-item svg.ic{font-size:21px}
+.bottom-nav .bn-item.active{color:var(--teal)}
+.bottom-nav .bn-item.active .bn-dot{width:4px;height:4px;border-radius:50%;background:var(--teal);margin-top:-2px}
+
+/* ============ 首页 ============ */
+.hero{position:relative;height:216px;flex:none;overflow:hidden}
+.hero img{width:100%;height:100%;object-fit:cover}
+.hero .hero-shade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(11,15,14,.02) 45%,rgba(11,15,14,.68));}
+.hero .hero-tag{position:absolute;left:16px;top:14px;display:inline-flex;align-items:center;gap:5px;background:rgba(11,15,14,.45);color:#fff;font-size:11px;padding:4px 10px;border-radius:999px;backdrop-filter:blur(4px)}
+.home-body{position:relative;margin-top:-34px;padding:0 12px 16px;z-index:2}
+.hotel-card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:14px 14px 12px}
+.hotel-card .hc-top{display:flex;align-items:flex-start;gap:12px}
+.hotel-card .hc-name{font-size:19px;font-weight:800;letter-spacing:.3px}
+.hotel-card .hc-room{margin-top:3px;display:inline-flex;align-items:center;gap:5px;background:var(--teal-50);color:var(--teal-600);font-size:12px;font-weight:600;padding:2px 9px;border-radius:999px}
+.hotel-card .hc-intro{margin-top:10px;font-size:12px;color:var(--ink-2);line-height:1.65}
+.hotel-card .hc-thumbs{display:flex;gap:8px;margin-top:12px}
+.hotel-card .hc-thumbs .th{flex:1;height:54px;border-radius:10px;overflow:hidden;background:var(--bg)}
+.hotel-card .hc-thumbs img{width:100%;height:100%;object-fit:cover}
+.hotel-card .hc-thumbs .th.more{display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--ink-2);border:1px solid var(--line)}
+
+/* 功能宫格 */
+.func-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:14px 8px 10px;margin-top:12px}
+.func-item{display:flex;flex-direction:column;align-items:center;gap:7px;padding:8px 2px;border-radius:10px}
+.func-item:active{background:var(--bg)}
+.func-item .fi-ic{width:44px;height:44px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:22px;color:#fff}
+.func-item .fi-label{font-size:11.5px;color:var(--ink);white-space:nowrap}
+.func-item.hot .fi-label{color:var(--teal-600);font-weight:600}
+.fi-teal{background:linear-gradient(135deg,#12A08B,#0F7B6C)}
+.fi-amber{background:linear-gradient(135deg,#F5B355,#E9962A)}
+.fi-blue{background:linear-gradient(135deg,#5B9BF0,#2B6FE8)}
+.fi-slate{background:linear-gradient(135deg,#7A8B86,#5C6F69)}
+
+/* 服务卡片 */
+.svc-card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);margin-top:12px;overflow:hidden}
+.svc-head{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:1px solid var(--line)}
+.svc-head .t{font-size:14px;font-weight:700}
+.svc-head .link{font-size:12px;color:var(--teal);display:inline-flex;align-items:center;gap:2px}
+.svc-item{display:flex;align-items:center;gap:11px;padding:12px 14px;border-bottom:1px solid #F0F2F1}
+.svc-item:last-child{border-bottom:none}
+.svc-item .si-ic{width:38px;height:38px;border-radius:11px;background:var(--teal-50);color:var(--teal);display:flex;align-items:center;justify-content:center;font-size:19px;flex:none}
+.svc-item .si-info{flex:1;min-width:0}
+.svc-item .si-title{font-size:13.5px;font-weight:600}
+.svc-item .si-desc{font-size:11.5px;color:var(--ink-3);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.svc-item .si-time{font-size:11px;color:var(--ink-3);margin-top:2px}
+.svc-item .si-time b{color:var(--red);font-weight:600}
+.svc-item .si-state{font-size:11px;color:var(--teal);font-weight:600}
+.svc-btn{flex:none;font-size:12px;font-weight:600;color:var(--red);border:1px solid #F3C4C5;background:#FFF5F5;padding:6px 13px;border-radius:999px}
+.svc-btn:active{background:var(--red-100)}
+
+/* 分类 tab */
+.cat-tabs{display:flex;background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);margin-top:12px;padding:4px;gap:4px}
+.cat-tab{flex:1;text-align:center;font-size:13px;font-weight:600;color:var(--ink-2);padding:9px 2px;border-radius:10px;white-space:nowrap}
+.cat-tab.active{background:var(--teal);color:#fff}
+.cat-panel{background:var(--card);border-radius:0 0 var(--radius) var(--radius);box-shadow:var(--shadow);margin-top:2px;overflow:hidden;display:none}
+.cat-panel.active{display:block}
+.cat-panel .cp-item{display:flex;align-items:center;gap:11px;padding:13px 14px;border-bottom:1px solid #F0F2F1}
+.cat-panel .cp-item:last-child{border-bottom:none}
+.cat-panel .cp-ic{width:34px;height:34px;border-radius:10px;background:var(--amber-100);color:var(--amber-600);display:flex;align-items:center;justify-content:center;font-size:18px;flex:none}
+.cat-panel .cp-t{font-size:13.5px;font-weight:600}
+.cat-panel .cp-d{font-size:11.5px;color:var(--ink-3);margin-top:1px}
+.cat-panel .cp-arrow{margin-left:auto;color:var(--ink-3);font-size:16px}
+.cp-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:14px}
+.cp-grid .cp-cell{display:flex;flex-direction:column;align-items:center;gap:7px;font-size:11.5px;color:var(--ink);padding:10px 2px;border-radius:10px;background:var(--bg)}
+.cp-grid .cp-cell svg.ic{font-size:22px;color:var(--teal)}
+
+/* ============ 通用组件 ============ */
+.card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:14px;margin:0 12px 12px}
+.card .card-title{font-size:14.5px;font-weight:700;display:flex;align-items:center;gap:6px}
+.card .card-sub{font-size:11.5px;color:var(--ink-3);margin-top:2px}
+.btn{display:flex;align-items:center;justify-content:center;gap:7px;width:100%;padding:13px;border-radius:12px;font-size:15px;font-weight:600;transition:.15s}
+.btn:active{transform:scale(.985)}
+.btn.primary{background:var(--teal);color:#fff}
+.btn.primary:active{background:var(--teal-600)}
+.btn.amber{background:var(--amber);color:#fff}
+.btn.secondary{background:#fff;color:var(--ink);border:1px solid var(--line)}
+.btn.ghost{background:transparent;color:var(--teal);border:1px solid #BBDCD5}
+.btn[disabled]{opacity:.55;pointer-events:none}
+.btn svg.ic{font-size:17px}
+.row-2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0 12px 12px}
+.field{margin-bottom:12px}
+.field .f-label{font-size:13px;font-weight:600;color:var(--ink);display:flex;align-items:center;gap:5px;margin-bottom:7px}
+.field .f-label .req{color:var(--red)}
+.input{width:100%;padding:12px 13px;border:1px solid var(--line);border-radius:11px;background:#FBFCFB;outline:none;font-size:15px}
+.input:focus{border-color:var(--teal);background:#fff}
+.input-box{display:flex;align-items:center;border:1px solid var(--line);border-radius:11px;background:#FBFCFB;overflow:hidden}
+.input-box .box{flex:1;padding:12px 4px;text-align:center;font-size:17px;font-weight:700;letter-spacing:1px;outline:none;border:none;background:transparent;text-transform:uppercase;min-width:0}
+.input-box .box:focus{background:#fff}
+.input-box .sep{color:var(--line);font-weight:700}
+.input-box.fixed .box{background:#EFF4F2;color:var(--ink-2)}
+
+/* 弹窗 */
+.mask{position:absolute;inset:0;background:rgba(16,22,20,.45);display:none;align-items:center;justify-content:center;z-index:40;padding:0 26px}
+.mask.show{display:flex}
+.modal{width:100%;background:#fff;border-radius:16px;padding:22px 18px 16px;box-shadow:0 24px 60px -20px rgba(0,0,0,.4);animation:pop .18s ease-out}
+@keyframes pop{from{transform:scale(.94);opacity:0}to{transform:scale(1);opacity:1}}
+.modal .m-title{font-size:16px;font-weight:700;text-align:center}
+.modal .m-sub{font-size:12.5px;color:var(--ink-2);text-align:center;margin-top:6px}
+.modal .m-value{font-size:26px;font-weight:800;text-align:center;letter-spacing:2px;color:var(--ink);margin-top:14px}
+.modal .m-value small{font-size:13px;font-weight:600;color:var(--ink-2)}
+.modal .m-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:22px}
+.modal .m-actions.one{grid-template-columns:1fr}
+.modal .m-btn{padding:12px;border-radius:11px;font-size:14.5px;font-weight:600;text-align:center}
+.modal .m-btn.ghost{background:var(--bg);color:var(--ink-2)}
+.modal .m-btn.solid{background:var(--teal);color:#fff}
+
+/* toast */
+.toast{position:absolute;left:50%;bottom:86px;transform:translateX(-50%) translateY(14px);background:rgba(16,22,20,.92);color:#fff;font-size:13px;padding:9px 18px;border-radius:999px;opacity:0;pointer-events:none;transition:.22s;z-index:60;max-width:86%;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ============ WiFi 页 ============ */
+.wifi-hero{margin:0 12px 12px;border-radius:var(--radius);overflow:hidden;position:relative;background:linear-gradient(135deg,#0F7B6C,#0B5F53);color:#fff;padding:18px 16px}
+.wifi-hero .wh-top{display:flex;align-items:center;gap:10px}
+.wifi-hero .wh-ic{width:44px;height:44px;border-radius:13px;background:rgba(255,255,255,.16);display:flex;align-items:center;justify-content:center;font-size:24px}
+.wifi-hero .wh-name{font-size:18px;font-weight:800}
+.wifi-hero .wh-sub{font-size:12px;opacity:.82;margin-top:2px}
+.wifi-hero .wh-tag{margin-left:auto;font-size:11px;background:rgba(255,255,255,.18);padding:5px 10px;border-radius:999px}
+.steps{display:flex;align-items:center;justify-content:center;gap:4px;margin:2px 12px 12px;padding:11px 10px;background:var(--card);border-radius:12px;box-shadow:var(--shadow)}
+.steps .step{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--ink-3)}
+.steps .step .n{width:18px;height:18px;border-radius:50%;background:var(--bg);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:10.5px;font-weight:700;color:var(--ink-3)}
+.steps .step.done .n{background:var(--teal);border-color:var(--teal);color:#fff}
+.steps .step.active{color:var(--teal);font-weight:700}
+.steps .step.active .n{background:var(--teal);border-color:var(--teal);color:#fff}
+.steps .step-line{width:26px;height:1px;background:var(--line)}
+.steps .step-line.done{background:var(--teal)}
+.wifi-info{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);margin:0 12px 12px;padding:6px 14px}
+.wifi-info .wi-row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid #F0F2F1;gap:10px}
+.wifi-info .wi-row:last-child{border-bottom:none}
+.wifi-info .wi-k{font-size:13px;color:var(--ink-2);flex:none;display:flex;align-items:center;gap:7px}
+.wifi-info .wi-k svg.ic{color:var(--ink-3);font-size:15px}
+.wifi-info .wi-v{font-size:14.5px;font-weight:700;display:flex;align-items:center;gap:9px;min-width:0}
+.wifi-info .wi-v .mono{font-family:"SF Mono",Consolas,monospace;letter-spacing:.4px}
+.wifi-info .wi-v .muted{font-size:11px;color:var(--ink-3);font-weight:400}
+.copy-btn{width:30px;height:30px;border-radius:8px;background:var(--teal-50);color:var(--teal);display:flex;align-items:center;justify-content:center;font-size:15px;flex:none}
+.copy-btn:active{background:var(--teal-100)}
+.badge{font-size:10.5px;font-weight:600;padding:3px 8px;border-radius:999px;flex:none}
+.badge.ok{background:var(--teal-100);color:var(--teal-600)}
+.badge.wait{background:var(--amber-100);color:var(--amber-600)}
+.badge.err{background:var(--red-100);color:var(--red)}
+.auth-panel{margin:0 12px 12px;border-radius:var(--radius);overflow:hidden;background:var(--card);box-shadow:var(--shadow)}
+.auth-panel .ap-head{display:flex;align-items:center;gap:9px;padding:13px 14px;font-size:14px;font-weight:700;border-bottom:1px solid var(--line)}
+.auth-panel .ap-head svg.ic{color:var(--teal)}
+.auth-panel .ap-body{padding:14px}
+.auth-panel .ap-empty{font-size:12.5px;color:var(--ink-3);text-align:center;padding:18px 0;line-height:1.7}
+.ap-log{display:flex;gap:11px;padding:10px 0;border-bottom:1px dashed var(--line)}
+.ap-log:last-child{border-bottom:none}
+.ap-log .log-ic{width:26px;height:26px;border-radius:8px;flex:none;display:flex;align-items:center;justify-content:center;font-size:14px}
+.ap-log .log-ic.ok{background:var(--teal-100);color:var(--teal)}
+.ap-log .log-ic.run{background:var(--amber-100);color:var(--amber-600)}
+.ap-log .log-ic.warn{background:var(--red-100);color:var(--red)}
+.ap-log .log-main{flex:1;min-width:0}
+.ap-log .log-title{font-size:13px;font-weight:600;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.ap-log .log-desc{font-size:11.5px;color:var(--ink-3);margin-top:2px;word-break:break-all}
+.spin{width:13px;height:13px;border:2px solid var(--teal-100);border-top-color:var(--teal);border-radius:50%;animation:sp .8s linear infinite;display:inline-block;vertical-align:-2px}
+@keyframes sp{to{transform:rotate(360deg)}}
+.success-hero{margin:8px 12px 12px;border-radius:var(--radius);background:linear-gradient(135deg,#0F7B6C,#0B5F53);color:#fff;padding:24px 18px;text-align:center}
+.success-hero .sh-ic{width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto 10px}
+.success-hero .sh-title{font-size:17px;font-weight:800}
+.success-hero .sh-sub{font-size:12.5px;opacity:.85;margin-top:5px}
+.success-hero .sh-meta{display:inline-flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-top:14px}
+.success-hero .sh-meta span{font-size:11.5px;background:rgba(255,255,255,.14);padding:5px 11px;border-radius:999px}
+
+/* 认证跳转覆盖层 */
+.jump-layer{position:absolute;inset:0;background:rgba(11,15,14,.72);backdrop-filter:blur(3px);display:none;align-items:center;justify-content:center;z-index:45;padding:0 24px}
+.jump-layer.show{display:flex}
+.jump-card{width:100%;background:#fff;border-radius:16px;padding:20px 18px;text-align:center;animation:pop .2s ease-out}
+.jump-card .jc-ic{width:46px;height:46px;margin:0 auto;border-radius:14px;background:var(--amber-100);color:var(--amber-600);display:flex;align-items:center;justify-content:center;font-size:24px}
+.jump-card .jc-title{font-size:15.5px;font-weight:800;margin-top:12px}
+.jump-card .jc-sub{font-size:12.5px;color:var(--ink-2);margin-top:5px;line-height:1.65}
+.jump-card .jc-url{margin-top:12px;background:var(--bg);border:1px dashed var(--line);border-radius:10px;padding:9px 10px;font-size:11px;color:var(--ink-2);word-break:break-all;text-align:left;font-family:"SF Mono",Consolas,monospace}
+.jump-card .jc-bar{margin-top:14px;height:5px;background:var(--line);border-radius:99px;overflow:hidden}
+.jump-card .jc-bar i{display:block;height:100%;width:0;background:var(--teal);border-radius:99px;transition:width .4s ease}
+
+/* ============ 停车页 ============ */
+.parking-hero{margin:0 12px 12px;border-radius:var(--radius);overflow:hidden;position:relative;background:linear-gradient(135deg,#16322C,#0E221D);color:#fff;padding:20px 16px 0;display:flex;align-items:flex-end;justify-content:space-between}
+.parking-hero .ph-left{flex:1;padding-bottom:18px}
+.parking-hero .ph-title{font-size:21px;font-weight:800;letter-spacing:.5px}
+.parking-hero .ph-sub{font-size:12.5px;opacity:.8;margin-top:5px}
+.parking-hero .ph-left .ph-line{width:34px;height:3px;background:var(--amber);border-radius:99px;margin-top:10px}
+.parking-hero .ph-car{font-size:104px;color:rgba(255,255,255,.14);line-height:1;transform:translateY(6px)}
+.p-form{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);margin:0 12px 12px;padding:16px 14px}
+.p-form .pf-room{display:flex;align-items:center;justify-content:space-between;background:var(--teal-50);border-radius:11px;padding:11px 13px;margin-bottom:16px}
+.p-form .pf-room .k{font-size:13px;color:var(--teal-600);display:flex;align-items:center;gap:7px;font-weight:600}
+.p-form .pf-room .v{font-size:15px;font-weight:800;color:var(--teal-700)}
+.p-note{display:flex;gap:8px;align-items:flex-start;margin-top:14px;font-size:11.5px;color:var(--ink-3);line-height:1.6}
+.p-note svg.ic{color:var(--amber);margin-top:2px}
+
+/* ============ AI 助手页 ============ */
+.ai-head{flex:none;background:linear-gradient(135deg,#0F7B6C,#0B5F53);color:#fff;padding:14px 16px 12px;position:relative}
+.ai-head .ah-name{font-size:17px;font-weight:800;display:flex;align-items:center;gap:8px}
+.ai-head .ah-name .avatar{width:32px;height:32px;border-radius:11px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-size:19px}
+.ai-head .ah-sub{font-size:12px;opacity:.85;margin-top:4px;margin-left:40px}
+.ai-head .ah-right{position:absolute;right:14px;top:18px;font-size:10.5px;background:rgba(255,255,255,.16);padding:4px 9px;border-radius:999px}
+.chat-body{flex:1;min-height:0;display:flex;flex-direction:column;padding:14px 13px 8px}
+.chat-msgs{flex:1;overflow-y:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.chat-msgs::-webkit-scrollbar{display:none}
+.bubble{display:flex;gap:9px;margin-bottom:13px;animation:msgIn .25s ease-out}
+@keyframes msgIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.bubble .b-avatar{width:30px;height:30px;border-radius:10px;flex:none;display:flex;align-items:center;justify-content:center;font-size:17px;margin-top:2px}
+.bubble.bot .b-avatar{background:var(--teal-100);color:var(--teal)}
+.bubble.user .b-avatar{background:var(--amber-100);color:var(--amber-600)}
+.bubble .b-content{max-width:76%;display:flex;flex-direction:column;gap:6px}
+.bubble .b-name{font-size:10.5px;color:var(--ink-3)}
+.bubble .b-text{background:#fff;border:1px solid var(--line);border-radius:4px 13px 13px 13px;padding:10px 12px;font-size:13.5px;line-height:1.7;box-shadow:var(--shadow)}
+.bubble.user{flex-direction:row-reverse}
+.bubble.user .b-text{background:var(--teal);color:#fff;border:none;border-radius:13px 4px 13px 13px}
+.bubble .b-action{margin-top:2px}
+.bubble .b-action .chip-btn{align-self:flex-start;display:inline-flex;align-items:center;gap:5px;background:var(--teal-50);color:var(--teal-600);font-size:12px;font-weight:600;padding:8px 13px;border-radius:999px;border:1px solid #CDE8E1}
+.bubble .b-action .chip-btn:active{background:var(--teal-100)}
+.his-divider{display:flex;align-items:center;gap:9px;margin:2px 0 13px;color:var(--ink-3);font-size:11px}
+.his-divider::before,.his-divider::after{content:"";flex:1;height:1px;background:var(--line)}
+.quick-row{display:flex;gap:8px;overflow-x:auto;padding:2px 0 12px;scrollbar-width:none}
+.quick-row::-webkit-scrollbar{display:none}
+.quick-chip{flex:none;background:#fff;border:1px solid var(--line);color:var(--ink);font-size:12.5px;padding:8px 13px;border-radius:999px;box-shadow:var(--shadow)}
+.quick-chip:active{background:var(--teal-50);border-color:#B9D9D2;color:var(--teal-600)}
+.ai-feats{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;padding:0 2px 12px}
+.ai-feat{display:flex;flex-direction:column;align-items:center;gap:5px;padding:9px 2px;background:#fff;border:1px solid var(--line);border-radius:12px;font-size:11px;color:var(--ink);box-shadow:var(--shadow)}
+.ai-feat:active{background:var(--teal-50)}
+.ai-feat svg.ic{font-size:20px;color:var(--teal)}
+.ai-input{flex:none;background:#FBFCFB;border-top:1px solid var(--line);padding:9px 11px 7px}
+.ai-input .ai-row{display:flex;align-items:center;gap:8px}
+.ai-input .ai-field{flex:1;background:#fff;border:1px solid var(--line);border-radius:999px;padding:10px 14px;font-size:13.5px;outline:none;color:var(--ink)}
+.ai-input .ai-field:focus{border-color:var(--teal)}
+.ai-send{width:38px;height:38px;border-radius:50%;background:var(--teal);color:#fff;display:flex;align-items:center;justify-content:center;font-size:17px;flex:none}
+.ai-send:active{background:var(--teal-600)}
+.ai-call{width:38px;height:38px;border-radius:50%;background:#fff;border:1px solid var(--line);color:var(--teal);display:flex;align-items:center;justify-content:center;font-size:17px;flex:none}
+.ai-foot{text-align:center;font-size:10px;color:var(--ink-3);padding:4px 0 2px}
+
+/* ============ 我的页 ============ */
+.mine-hero{background:linear-gradient(135deg,#0F7B6C,#0B5F53);color:#fff;padding:24px 16px 20px;display:flex;align-items:center;gap:14px}
+.mine-hero .m-avatar{width:56px;height:56px;border-radius:18px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-size:30px}
+.mine-hero .m-name{font-size:17px;font-weight:800}
+.mine-hero .m-room{font-size:12px;opacity:.85;margin-top:4px}
+.mine-list{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);margin:12px;overflow:hidden}
+.mine-item{display:flex;align-items:center;gap:11px;padding:14px;border-bottom:1px solid #F0F2F1;font-size:13.5px}
+.mine-item:last-child{border-bottom:none}
+.mine-item svg.ic{font-size:19px;color:var(--teal)}
+.mine-item .mi-arrow{margin-left:auto;color:var(--ink-3)}
+
+/* ============ 侧栏 ============ */
+.side-panel{width:400px;flex:none;display:flex;flex-direction:column;gap:14px;padding-top:6px}
+.panel-card{background:#13231F;border:1px solid #24433B;border-radius:16px;padding:18px}
+.panel-card h3{font-size:15px;font-weight:700;color:#EAF4F1;display:flex;align-items:center;gap:8px}
+.panel-card h3 .tag{font-size:10.5px;font-weight:600;color:#9BC8BC;background:#1B3A32;padding:3px 8px;border-radius:999px}
+.panel-card p{font-size:12.5px;color:#9FB6AF;line-height:1.7;margin-top:8px}
+.feature-row{display:flex;gap:10px;margin-top:12px;padding-top:12px;border-top:1px solid #223E37}
+.feature-row:first-of-type{margin-top:0;padding-top:0;border-top:none}
+.feature-row .f-ic{width:34px;height:34px;border-radius:10px;flex:none;display:flex;align-items:center;justify-content:center;font-size:18px;color:#7FD3C1;background:#173A31}
+.feature-row .f-main{flex:1;min-width:0}
+.feature-row .f-title{font-size:13px;font-weight:700;color:#DCEAE6}
+.feature-row .f-desc{font-size:11.5px;color:#93AAA3;margin-top:3px;line-height:1.6}
+.flow-box{margin-top:12px;background:#0E1C18;border-radius:12px;padding:14px 12px}
+.flow-title{font-size:12.5px;font-weight:700;color:#CBE0DA;margin-bottom:11px;display:flex;align-items:center;gap:6px}
+.flow-node{display:flex;gap:10px;position:relative;padding-bottom:14px}
+.flow-node:last-child{padding-bottom:0}
+.flow-node::before{content:"";position:absolute;left:13px;top:26px;bottom:2px;width:1.5px;background:#2A4A42}
+.flow-node:last-child::before{display:none}
+.flow-node .fn-n{width:28px;height:28px;border-radius:9px;flex:none;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#0E1C18;background:#7FD3C1}
+.flow-node .fn-body{flex:1;min-width:0;padding-top:2px}
+.flow-node .fn-title{font-size:12.5px;font-weight:700;color:#E4F0EC}
+.flow-node .fn-role{font-size:10px;color:#7FA79C;margin-left:6px;font-weight:500}
+.flow-node .fn-desc{font-size:11px;color:#8FA9A1;margin-top:3px;line-height:1.6}
+.flow-node .fn-mono{font-size:10.5px;color:#C7A06B;font-family:"SF Mono",Consolas,monospace;margin-top:3px;word-break:break-all}
+.flow-note{margin-top:12px;font-size:11px;color:#7FA79C;background:#12241F;border:1px dashed #2A4A42;border-radius:10px;padding:9px 11px;line-height:1.7}
+.api-table{width:100%;border-collapse:collapse;margin-top:12px;font-size:11.5px}
+.api-table th{color:#7FA79C;font-weight:600;text-align:left;padding:7px 8px;border-bottom:1px solid #24433B;font-size:10.5px}
+.api-table td{padding:8px;border-bottom:1px solid #1E3A33;color:#C4D6D0;vertical-align:top}
+.api-table td .mono{font-family:"SF Mono",Consolas,monospace;font-size:10.5px;color:#C7A06B}
+.api-table td .sig{display:inline-block;font-size:9.5px;font-weight:600;padding:1.5px 6px;border-radius:99px}
+.api-table td .sig.no{background:#3A2F17;color:#E3B35C}
+.api-table td .sig.yes{background:#173A31;color:#7FD3C1}
+.api-table tr:last-child td{border-bottom:none}
+.panel-note{margin-top:14px;font-size:11px;color:#7FA79C;line-height:1.7;padding-top:12px;border-top:1px solid #223E37}
+.panel-note b{color:#C7D8D2}
+
+/* ============ 管理平台 ============ */
+.admin{display:none;min-height:100vh;background:#F3F5F4}
+.admin.show{display:block}
+.admin-top{background:#0F2A24;color:#fff;padding:0 28px;height:60px;display:flex;align-items:center;gap:16px}
+.admin-top .at-brand{display:flex;align-items:center;gap:9px;font-size:16px;font-weight:800}
+.admin-top .at-brand .mark{width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,var(--teal),#17A390);display:flex;align-items:center;justify-content:center;font-size:15px}
+.admin-top .at-crumb{font-size:13px;color:#9CC0B6}
+.admin-top .spacer{flex:1}
+.admin-top .back-app{display:inline-flex;align-items:center;gap:7px;font-size:13px;color:#D7E8E3;border:1px solid #31534A;padding:7px 13px;border-radius:999px}
+.admin-top .back-app:hover{background:#173A31}
+.admin-body{max-width:1080px;margin:0 auto;padding:24px 20px 48px}
+.admin-hero{background:linear-gradient(135deg,#0F7B6C,#0B5F63);color:#fff;border-radius:16px;padding:22px 24px;display:flex;align-items:center;gap:14px;margin-bottom:18px}
+.admin-hero .ah-ic{width:48px;height:48px;border-radius:14px;background:rgba(255,255,255,.16);display:flex;align-items:center;justify-content:center;font-size:26px}
+.admin-hero h2{font-size:19px;font-weight:800}
+.admin-hero p{font-size:12.5px;opacity:.85;margin-top:4px;line-height:1.7}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px}
+.stat-card{background:#fff;border:1px solid var(--line);border-radius:13px;padding:15px 17px}
+.stat-card .st-num{font-size:26px;font-weight:800;color:var(--teal-600)}
+.stat-card .st-label{font-size:12px;color:var(--ink-3);margin-top:2px}
+.admin-card{background:#fff;border:1px solid var(--line);border-radius:14px;margin-bottom:18px;overflow:hidden}
+.admin-card .ac-head{display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid var(--line)}
+.admin-card .ac-head h3{font-size:14.5px;font-weight:700;flex:1}
+.admin-card .ac-head .hint{font-size:11.5px;color:var(--ink-3)}
+.btn-sm{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;padding:7px 13px;border-radius:9px}
+.btn-sm.teal{background:var(--teal);color:#fff}
+.btn-sm.teal:hover{background:var(--teal-600)}
+.btn-sm.line{background:#fff;border:1px solid var(--line);color:var(--ink-2)}
+.btn-sm.line:hover{border-color:#B9D9D2;color:var(--teal)}
+.admin-table-wrap{overflow-x:auto}
+table.admin-table{width:100%;border-collapse:collapse;font-size:13px;min-width:760px}
+.admin-table th{text-align:left;font-size:12px;color:var(--ink-3);font-weight:600;padding:11px 16px;border-bottom:1px solid var(--line);background:#FAFBFA;white-space:nowrap}
+.admin-table td{padding:13px 16px;border-bottom:1px solid #EFF2F1;vertical-align:middle}
+.admin-table tr:last-child td{border-bottom:none}
+.admin-table tr:hover td{background:#FAFCFB}
+.admin-table .qa-q{font-weight:700;max-width:230px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.admin-table .qa-a{max-width:320px;color:var(--ink-2);font-size:12px;line-height:1.6;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.tag-mini{display:inline-block;font-size:11px;font-weight:600;padding:3px 9px;border-radius:999px}
+.tag-mini.on{background:var(--teal-100);color:var(--teal-600)}
+.tag-mini.off{background:#EDF0EF;color:var(--ink-3)}
+.tag-mini.cat{background:var(--amber-100);color:var(--amber-600)}
+.op-btn{font-size:12px;color:var(--teal);margin-right:12px}
+.op-btn:hover{text-decoration:underline}
+.op-btn.danger{color:var(--red)}
+.qa-form{display:grid;grid-template-columns:1fr 1fr 130px;gap:12px;padding:16px 18px;border-bottom:1px solid var(--line)}
+.qa-form input,.qa-form textarea,.qa-form select{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:9px;outline:none;font-size:13px;background:#FBFCFB}
+.qa-form input:focus,.qa-form textarea:focus{border-color:var(--teal);background:#fff}
+.qa-form textarea{resize:vertical;min-height:70px}
+.qa-form .qf-submit{align-self:end}
+.admin-empty{text-align:center;color:var(--ink-3);font-size:12.5px;padding:26px}
+.admin-foot{text-align:center;font-size:11px;color:var(--ink-3);margin-top:8px}
+
+/* ============ WiFi 流程明细 ============ */
+.mini-flow{margin-top:4px}
+.mf-row{display:flex;gap:10px;padding:7px 0;border-bottom:1px dashed var(--line);font-size:12px;line-height:1.7;color:var(--ink-2)}
+.mf-row:last-child{border-bottom:none}
+.mf-row b{color:var(--ink)}
+.mf-n{width:20px;height:20px;border-radius:50%;background:var(--teal);color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex:none;margin-top:1px}
+.mf-mono{display:block;font-family:"SF Mono",Consolas,monospace;font-size:10.5px;color:var(--teal-600);margin-top:2px;word-break:break-all}
+summary::-webkit-details-marker{display:none}
+.chat-msgs{padding-bottom:2px}
+
+/* ============ 响应式 ============ */
+@media (max-width:900px){
+  .side-panel{display:none}
+  .workspace{justify-content:center;padding:14px 0 0}
+}
+@media (max-width:768px){
+  .topbar{display:none}
+  .stage{background:#F2F4F3}
+  .workspace{padding:0}
+  .phone-wrap{padding:0;width:100%}
+  .phone{width:100%;height:100dvh;border-radius:0;padding:0;box-shadow:none}
+  .phone .inner{border-radius:0}
+  .admin-top{padding:0 14px}
+  .admin-body{padding:16px 12px 40px}
+  .stats{grid-template-columns:repeat(3,1fr);gap:8px}
+  .qa-form{grid-template-columns:1fr}
+  .qa-form .qf-submit{width:100%}
+  .float-admin{position:fixed;right:14px;bottom:90px;z-index:70;display:flex;align-items:center;gap:6px;background:var(--teal);color:#fff;font-size:12px;font-weight:600;padding:10px 14px;border-radius:999px;box-shadow:0 10px 26px -8px rgba(15,123,108,.7)}
+}
+@media (min-width:769px){.float-admin{display:none}}
+</style>
+</head>
+<body>
+<!-- SVG 图标库 -->
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
+  <symbol id="i-phone" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-sparkle" viewBox="0 0 24 24"><path d="M12 3.5l1.8 4.7 4.7 1.8-4.7 1.8L12 16.5l-1.8-4.7-4.7-1.8 4.7-1.8L12 3.5z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><path d="M19 14.5l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8.8-2zM5 11l.6 1.6 1.6.6-1.6.6L5 15.4l-.6-1.6-1.6-.6 1.6-.6L5 11z" fill="currentColor" stroke="none"/></symbol>
+  <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3" y="4.5" width="18" height="17" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M16 2.5v4M8 2.5v4M3 10h18M12 13.5v4.5M9.75 15.75h4.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+  <symbol id="i-wifi" viewBox="0 0 24 24"><path d="M5 12.2a11.4 11.4 0 0 1 14 0M8.5 15.7a6.6 6.6 0 0 1 7 0M12 19.5h.01" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-bag" viewBox="0 0 24 24"><path d="M6.2 7.5h11.6l.9 12a1.6 1.6 0 0 1-1.6 1.7H6.9a1.6 1.6 0 0 1-1.6-1.7l.9-12z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M9 7.5V6a3 3 0 0 1 6 0v1.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+  <symbol id="i-exit" viewBox="0 0 24 24"><path d="M10 21H5.5A1.5 1.5 0 0 1 4 19.5v-15A1.5 1.5 0 0 1 5.5 3H10M17 8l4 4-4 4M21 12H9.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-car" viewBox="0 0 24 24"><path d="M3.5 13.5l1.6-4.2A2.2 2.2 0 0 1 7.2 7.7h9.6a2.2 2.2 0 0 1 2.1 1.6l1.6 4.2v5.2a.8.8 0 0 1-.8.8h-1.4a.8.8 0 0 1-.8-.8v-1H5.5v1a.8.8 0 0 1-.8.8H4.3a.8.8 0 0 1-.8-.8v-5.2z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M3.5 13.5h17M7 16.8h.01M17 16.8h.01" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></symbol>
+  <symbol id="i-wrench" viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></symbol>
+  <symbol id="i-star" viewBox="0 0 24 24"><path d="M12 3.3l2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8L3.5 9.5l5.9-.9L12 3.3z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 21.5s7.5-3.8 7.5-9.5V5.8L12 2.8 4.5 5.8V12c0 5.7 7.5 9.5 7.5 9.5z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M9 11.8l2.2 2.2 3.8-4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-doc" viewBox="0 0 24 24"><path d="M14 2.5H6.5A1.5 1.5 0 0 0 5 4v16a1.5 1.5 0 0 0 1.5 1.5h11A1.5 1.5 0 0 0 19 20V7.5L14 2.5z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M14 2.5v5h5M16 13H8.5M16 16.5H8.5M10.5 9.5h-2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 7v5l3.2 2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M4.5 21c.8-3.8 4-5.8 7.5-5.8s6.7 2 7.5 5.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+  <symbol id="i-ai" viewBox="0 0 24 24"><path d="M12 2.5v2.5M9.5 4h5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><rect x="5" y="8" width="14" height="11" rx="3" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M9.5 8V6.5a2.5 2.5 0 0 1 5 0V8M10 12.5h.01M14 12.5h.01" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+  <symbol id="i-back" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M5 15V5.5A1.5 1.5 0 0 1 6.5 4H15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-send" viewBox="0 0 24 24"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M21 21l-4.3-4.3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></symbol>
+  <symbol id="i-edit" viewBox="0 0 24 24"><path d="M11 4H5.5A1.5 1.5 0 0 0 4 5.5v13A1.5 1.5 0 0 0 5.5 20h13a1.5 1.5 0 0 0 1.5-1.5V13M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24"><path d="M3.5 6.5h17M8.5 6.5V4.8A1.3 1.3 0 0 1 9.8 3.5h4.4a1.3 1.3 0 0 1 1.3 1.3v1.7M19 6.5v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-12M10 11v5M14 11v5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24"><rect x="4.5" y="10.5" width="15" height="10" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 14.5v2.5" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></symbol>
+  <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M3 12h18M12 3c2.6 2.5 4 5.6 4 9s-1.4 6.5-4 9c-2.6-2.5-4-5.6-4-9s1.4-6.5 4-9z" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
+  <symbol id="i-home" viewBox="0 0 24 24"><path d="M3.5 10.5L12 3.5l8.5 7M5.5 9.2V20a.8.8 0 0 0 .8.8h11.4a.8.8 0 0 0 .8-.8V9.2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-chat" viewBox="0 0 24 24"><path d="M21 11.8a8.2 8.2 0 0 1-8.2 8.2c-1.5 0-2.9-.4-4.1-1.1L3 20.5l1.6-4.9A8.2 8.2 0 1 1 21 11.8z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20.5 12a8.5 8.5 0 1 1-2.5-6M21 3.5V8h-4.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-warn" viewBox="0 0 24 24"><path d="M10.3 4.1L2.1 18.6a1.8 1.8 0 0 0 1.5 2.7h16.8a1.8 1.8 0 0 0 1.5-2.7L13.7 4.1a1.9 1.9 0 0 0-3.4 0z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M12 9.5v4M12 17h.01" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></symbol>
+  <symbol id="i-signal" viewBox="0 0 24 24"><path d="M4.5 18.5v-3M9 18.5v-6M13.5 18.5v-9M18 18.5v-12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></symbol>
+  <symbol id="i-battery" viewBox="0 0 24 24"><rect x="2.5" y="8" width="16" height="8" rx="2.2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M21 11v2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><rect x="4.5" y="10" width="8" height="4" rx="1" fill="currentColor" stroke="none"/></symbol>
+  <symbol id="i-camera" viewBox="0 0 24 24"><path d="M23 18.5a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-2.5h6L17 6h4a2 2 0 0 1 2 2v10.5z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle cx="12" cy="13" r="3.6" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
+  <symbol id="i-bed" viewBox="0 0 24 24"><path d="M2.5 17.5v-6a2 2 0 0 1 2-2h15a2 2 0 0 1 2 2v6M2.5 17.5h19M2.5 17.5V20M21.5 17.5V20M6.5 9.5V7h11v2.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-location" viewBox="0 0 24 24"><path d="M20 10.5c0 5.8-8 11-8 11s-8-5.2-8-11a8 8 0 0 1 16 0z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle cx="12" cy="10.5" r="3" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
+  <symbol id="i-feedback" viewBox="0 0 24 24"><path d="M12 3.5c-5 0-9 3.5-9 7.8 0 2.3 1.2 4.4 3.1 5.8V20l3.7-1.9c.7.2 1.4.3 2.2.3 5 0 9-3.5 9-7.8s-4-7.1-9-7.1z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M8.5 11.2h.01M12 11.2h.01M15.5 11.2h.01" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></symbol>
+  <symbol id="i-dot" viewBox="0 0 24 24"><circle cx="12" cy="12" r="2.4" fill="currentColor" stroke="none"/></symbol>
+  <symbol id="i-key" viewBox="0 0 24 24"><circle cx="8" cy="14.5" r="4" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M11 11.5L20 2.5M17 5.5l3 3M14.5 8l2 2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+</svg>
+
+<div class="stage">
+  <header class="topbar">
+    <div class="brand"><span class="mark"><svg class="ic"><use href="#i-wifi" xlink:href="#i-wifi"/></svg></span>云居伴旅<small>智慧客房服务小程序 · 交互原型</small></div>
+    <div class="spacer"></div>
+    <button class="tool-btn" onclick="toast('当前为交互演示原型，接入时请按《网关认证API文档 v1.0》实现')">接口说明</button>
+    <button class="tool-btn primary" onclick="showAdmin()"><svg class="ic" style="font-size:15px"><use href="#i-ai" xlink:href="#i-ai"/></svg>管理平台 · AI问答</button>
+  </header>
+  <div class="workspace">
+    <div class="phone-wrap"><div class="phone"><div class="inner">
+      <div class="screen">
+        <div class="statusbar">
+          <span>16:33</span>
+          <span class="sb-group">
+            <svg class="ic"><use href="#i-signal" xlink:href="#i-signal"/></svg>
+            <svg class="ic"><use href="#i-wifi" xlink:href="#i-wifi"/></svg>
+            <svg class="ic"><use href="#i-battery" xlink:href="#i-battery"/></svg>
+            <span style="font-size:11px;font-weight:600">30</span>
+          </span>
+        </div>
+
+        <!-- ===== 视图：首页 ===== -->
+        <section class="view active" id="view-home">
+          <div class="view-scroll">
+            <div class="hero">
+              <img src="assets/hotel-hero.jpg" alt="星焕9号酒店夜景">
+              <div class="hero-shade"></div>
+              <span class="hero-tag"><svg class="ic" style="font-size:11px"><use href="#i-lock" xlink:href="#i-lock"/></svg>云居伴旅 · 智慧客房</span>
+            </div>
+            <div class="home-body">
+              <div class="hotel-card">
+                <div class="hc-top">
+                  <div style="flex:1;min-width:0">
+                    <div class="hc-name">星焕9号酒店</div>
+                    <span class="hc-room"><svg class="ic" style="font-size:12px"><use href="#i-key" xlink:href="#i-key"/></svg>0502 房间</span>
+                  </div>
+                  <svg class="ic" style="font-size:20px;color:var(--amber);margin-top:4px"><use href="#i-star" xlink:href="#i-star"/></svg>
+                </div>
+                <div class="hc-intro">坐落于福州市晋安区晋安湖畔，紧邻东二环泰禾广场商圈，距福州火车站约10分钟车程，是一家集商务与休闲于一体的城市度假酒店，由「云居伴旅」提供智慧客房服务。</div>
+                <div class="hc-thumbs">
+                  <div class="th"><img src="assets/hotel-hero.jpg" alt="酒店外观"></div>
+                  <div class="th"><img src="assets/hotel-hero.jpg" style="object-position:center 55%" alt="酒店夜景"></div>
+                  <div class="th more" onclick="toast('房间实景图（演示）')">实景 +6</div>
+                </div>
+              </div>
+
+              <div class="func-grid">
+                <button class="func-item" onclick="toast('正在拨打前台电话 0591-8765 4321（演示）')"><span class="fi-ic fi-teal"><svg class="ic"><use href="#i-phone" xlink:href="#i-phone"/></svg></span><span class="fi-label">前台电话</span></button>
+                <button class="func-item" onclick="toast('已提交打扫申请，服务员将尽快上门（演示）')"><span class="fi-ic fi-blue"><svg class="ic"><use href="#i-sparkle" xlink:href="#i-sparkle"/></svg></span><span class="fi-label">呼叫打扫</span></button>
+                <button class="func-item" onclick="toast('续住服务请致电前台办理（演示）')"><span class="fi-ic fi-slate"><svg class="ic"><use href="#i-calendar" xlink:href="#i-calendar"/></svg></span><span class="fi-label">续住服务</span></button>
+                <button class="func-item hot" onclick="goWifi()"><span class="fi-ic fi-amber"><svg class="ic"><use href="#i-wifi" xlink:href="#i-wifi"/></svg></span><span class="fi-label">Wifi密码</span></button>
+                <button class="func-item" onclick="toast('商城送物（演示）')"><span class="fi-ic fi-teal"><svg class="ic"><use href="#i-bag" xlink:href="#i-bag"/></svg></span><span class="fi-label">商城送物</span></button>
+                <button class="func-item" onclick="toast('退房请至前台办理，或致电 0591-8765 4321（演示）')"><span class="fi-ic fi-slate"><svg class="ic"><use href="#i-exit" xlink:href="#i-exit"/></svg></span><span class="fi-label">一键退房</span></button>
+                <button class="func-item hot" onclick="goParking()"><span class="fi-ic fi-blue"><svg class="ic"><use href="#i-car" xlink:href="#i-car"/></svg></span><span class="fi-label">停车服务</span></button>
+                <button class="func-item" onclick="toast('故障反馈已打开（演示）')"><span class="fi-ic fi-amber"><svg class="ic"><use href="#i-wrench" xlink:href="#i-wrench"/></svg></span><span class="fi-label">故障反馈</span></button>
+              </div>
+
+              <div class="svc-card">
+                <div class="svc-head"><span class="t">您当前有 6 条服务</span><button class="link" onclick="toast('全部服务列表（演示）')">查看全部服务 <svg class="ic" style="font-size:13px"><use href="#i-refresh" xlink:href="#i-refresh"/></svg></button></div>
+                <div class="svc-item">
+                  <div class="si-ic"><svg class="ic"><use href="#i-sparkle" xlink:href="#i-sparkle"/></svg></div>
+                  <div class="si-info">
+                    <div class="si-title">呼叫打扫</div>
+                    <div class="si-time">10-22 10:27 提交 · 已超时 <b>4天6小时4分</b></div>
+                  </div>
+                  <button class="svc-btn" onclick="toast('已向服务员催单，请留意服务消息')">催单</button>
+                </div>
+                <div class="svc-item">
+                  <div class="si-ic"><svg class="ic"><use href="#i-wifi" xlink:href="#i-wifi"/></svg></div>
+                  <div class="si-info">
+                    <div class="si-title">WiFi认证连接</div>
+                    <div class="si-desc">xnzz · 房间 0502 自动获取</div>
+                  </div>
+                  <span class="si-state">已认证</span>
+                </div>
+              </div>
+
+              <div class="cat-tabs" role="tablist">
+                <button class="cat-tab active" data-cat="serv" onclick="switchCat('serv',this)">客房服务</button>
+                <button class="cat-tab" data-cat="policy" onclick="switchCat('policy',this)">设施政策</button>
+                <button class="cat-tab" data-cat="room" onclick="switchCat('room',this)">房型介绍</button>
+                <button class="cat-tab" data-cat="fac" onclick="switchCat('fac',this)">设施展示</button>
+              </div>
+              <div class="cat-panel active" id="cat-serv">
+                <div class="cp-item" onclick="toast('客房清洁（演示）')"><div class="cp-ic"><svg class="ic"><use href="#i-sparkle" xlink:href="#i-sparkle"/></svg></div><div><div class="cp-t">客房清洁</div><div class="cp-d">按需打扫 · 每日一次</div></div><svg class="ic cp-arrow"><use href="#i-back" xlink:href="#i-back"/></svg></div>
+                <div class="cp-item" onclick="toast('房间续住请致电前台（演示）')"><div class="cp-ic"><svg class="ic"><use href="#i-calendar" xlink:href="#i-calendar"/></svg></div><div><div class="cp-t">房间续住</div><div class="cp-d">延长入住 · 前台确认</div></div><svg class="ic cp-arrow"><use href="#i-back" xlink:href="#i-back"/></svg></div>
+                <div class="cp-item" onclick="goWifi()"><div class="cp-ic"><svg class="ic"><use href="#i-wifi" xlink:href="#i-wifi"/></svg></div><div><div class="cp-t">WIFI连接</div><div class="cp-d">一键认证 · 免输密码</div></div><svg class="ic cp-arrow"><use href="#i-back" xlink:href="#i-back"/></svg></div>
+              </div>
+              <div class="cat-panel" id="cat-policy">
+                <div class="cp-item"><div class="cp-ic"><svg class="ic"><use href="#i-clock" xlink:href="#i-clock"/></svg></div><div><div class="cp-t">健身中心</div><div class="cp-d">07:00 - 22:00 · 刷卡进入</div></div><svg class="ic cp-arrow"><use href="#i-back" xlink:href="#i-back"/></svg></div>
+                <div class="cp-item"><div class="cp-ic"><svg class="ic"><use href="#i-bed" xlink:href="#i-bed"/></svg></div><div><div class="cp-t">自助洗衣房</div><div class="cp-d">24小时 · 免费使用</div></div><svg class="ic cp-arrow"><use href="#i-back" xlink:href="#i-back"/></svg></div>
+                <div class="cp-item"><div class="cp-ic"><svg class="ic"><use href="#i-clock" xlink:href="#i-clock"/></svg></div><div><div class="cp-t">延迟退房</div><div class="cp-d">14:00 前退房 · 视当日房态</div></div><svg class="ic cp-arrow"><use href="#i-back" xlink:href="#i-back"/></svg></div>
+              </div>
+              <div class="cat-panel" id="cat-room">
+                <div class="cp-grid">
+                  <div class="cp-cell"><svg class="ic"><use href="#i-bed" xlink:href="#i-bed"/></svg>大床房</div>
+                  <div class="cp-cell"><svg class="ic"><use href="#i-bed" xlink:href="#i-bed"/></svg>双床房</div>
+                  <div class="cp-cell"><svg class="ic"><use href="#i-camera" xlink:href="#i-camera"/></svg>湖景套房</div>
+                  <div class="cp-cell"><svg class="ic"><use href="#i-camera" xlink:href="#i-camera"/></svg>家庭房</div>
+                  <div class="cp-cell"><svg class="ic"><use href="#i-camera" xlink:href="#i-camera"/></svg>行政房</div>
+                  <div class="cp-cell"><svg class="ic"><use href="#i-star" xlink:href="#i-star"/></svg>总统套房</div>
+                </div>
+              </div>
+              <div class="cat-panel" id="cat-fac">
+                <div class="cp-grid">
+                  <div class="cp-cell"><svg class="ic"><use href="#i-car" xlink:href="#i-car"/></svg>停车场</div>
+                  <div class="cp-cell"><svg class="ic"><use href="#i-sparkle" xlink:href="#i-sparkle"/></svg>健身房</div>
+                  <div class="cp-cell"><svg class="ic"><use href="#i-bed" xlink:href="#i-bed"/></svg>洗衣房</div>
+                  <div class="cp-cell"><svg class="ic"><use href="#i-camera" xlink:href="#i-camera"/></svg>餐厅</div>
+                  <div class="cp-cell"><svg class="ic"><use href="#i-chat" xlink:href="#i-chat"/></svg>会议室</div>
+                  <div class="cp-cell"><svg class="ic"><use href="#i-shield" xlink:href="#i-shield"/></svg>无障碍设施</div>
+                </div>
+              </div>
+              <div style="text-align:center;padding:10px 0 4px">
+                <button style="display:inline-flex;align-items:center;gap:5px;font-size:12.5px;color:var(--ink-3)" onclick="toast('意见反馈已打开（演示）')"><svg class="ic" style="font-size:14px"><use href="#i-feedback" xlink:href="#i-feedback"/></svg>意见反馈</button>
+              </div>
+            </div>
+          </div>
+          <nav class="bottom-nav">
+            <button class="bn-item active" data-nav="home" onclick="goRoot('home',this)"><svg class="ic"><use href="#i-home" xlink:href="#i-home"/></svg><span>首页</span><span class="bn-dot"></span></button>
+            <button class="bn-item" data-nav="ai" onclick="goRoot('ai',this)"><svg class="ic"><use href="#i-ai" xlink:href="#i-ai"/></svg><span>AI助手</span><span class="bn-dot"></span></button>
+            <button class="bn-item" data-nav="mine" onclick="goRoot('mine',this)"><svg class="ic"><use href="#i-user" xlink:href="#i-user"/></svg><span>我的</span><span class="bn-dot"></span></button>
+          </nav>
+        </section>
+        <!-- ===== 视图：Wifi密码（一键认证连接） ===== -->
+        <section class="view" id="view-wifi">
+          <div class="ph-header">
+            <button class="back" onclick="goHome()"><svg class="ic"><use href="#i-back" xlink:href="#i-back"/></svg></button>
+            <h2>Wifi密码</h2>
+            <span class="sub">一键认证 · 免输密码</span>
+            <button class="menu" onclick="toast('更多（演示）')"><span style="display:flex;gap:3px"><i style="width:4px;height:4px;border-radius:50%;background:currentColor"></i><i style="width:4px;height:4px;border-radius:50%;background:currentColor"></i><i style="width:4px;height:4px;border-radius:50%;background:currentColor"></i></span></button>
+          </div>
+          <div class="view-scroll">
+            <div class="wifi-hero">
+              <div class="wh-top">
+                <div class="wh-ic"><svg class="ic"><use href="#i-wifi" xlink:href="#i-wifi"/></svg></div>
+                <div style="flex:1;min-width:0">
+                  <div class="wh-name">客房 WiFi 一键认证</div>
+                  <div class="wh-sub">按房间号自动获取网络信息 · 认证后即可上网</div>
+                </div>
+                <span class="wh-tag">房间 0502</span>
+              </div>
+            </div>
+
+            <div class="steps">
+              <div class="step active" id="st1"><span class="n">1</span>获取网络信息</div>
+              <div class="step-line" id="sl1"></div>
+              <div class="step" id="st2"><span class="n">2</span>认证连接</div>
+              <div class="step-line" id="sl2"></div>
+              <div class="step" id="st3"><span class="n">3</span>上网成功</div>
+            </div>
+
+            <div class="wifi-info">
+              <div class="wi-row"><span class="wi-k"><svg class="ic"><use href="#i-lock" xlink:href="#i-lock"/></svg>所住房间</span><span class="wi-v">0502</span></div>
+              <div class="wi-row"><span class="wi-k"><svg class="ic"><use href="#i-wifi" xlink:href="#i-wifi"/></svg>WiFi名称（SSID）</span><span class="wi-v"><span class="mono">xnzz</span><button class="copy-btn" onclick="copyText('xnzz')"><svg class="ic"><use href="#i-copy" xlink:href="#i-copy"/></svg></button></span></div>
+              <div class="wi-row"><span class="wi-k"><svg class="ic"><use href="#i-key" xlink:href="#i-key"/></svg>WiFi密码</span><span class="wi-v"><span class="mono">xnzz@2022</span><button class="copy-btn" onclick="copyText('xnzz@2022')"><svg class="ic"><use href="#i-copy" xlink:href="#i-copy"/></svg></button></span></div>
+              <div class="wi-row"><span class="wi-k"><svg class="ic"><use href="#i-user" xlink:href="#i-user"/></svg>认证账号</span><span class="wi-v"><span class="mono" style="font-size:12.5px">yh_0502_20261026</span><span class="badge ok">自动生成</span></span></div>
+              <div class="wi-row"><span class="wi-k"><svg class="ic"><use href="#i-globe" xlink:href="#i-globe"/></svg>宽带认证</span><span class="wi-v"><span style="font-size:12.5px;font-weight:600">服务端签名 · 网关放行</span><span class="badge wait" id="gwBadge">待认证</span></span></div>
+            </div>
+
+            <div class="auth-panel">
+              <div class="ap-head"><svg class="ic"><use href="#i-shield" xlink:href="#i-shield"/></svg>认证连接过程 <span class="badge wait" id="flowBadge">未开始</span></div>
+              <div class="ap-body" id="apBody">
+                <div class="ap-empty">点击下方「一键认证连接」：<br>获取终端信息 → 跳转认证网关 → 服务端认证 → 联网成功</div>
+              </div>
+            </div>
+
+            <div style="margin:0 12px 10px">
+              <button class="btn primary" id="authBtn" onclick="startAuth()"><svg class="ic"><use href="#i-wifi" xlink:href="#i-wifi"/></svg>一键认证连接</button>
+            </div>
+            <div style="margin:0 12px 10px">
+              <button class="btn secondary" onclick="copyText('xnzz@2022')"><svg class="ic"><use href="#i-copy" xlink:href="#i-copy"/></svg>复制密码并手动连接</button>
+            </div>
+            <div style="margin:0 12px 14px;display:flex;align-items:center;justify-content:center;gap:5px;font-size:12.5px;color:var(--ink-3);flex-wrap:wrap;text-align:center">
+              <svg class="ic" style="color:var(--amber-600)"><use href="#i-warn" xlink:href="#i-warn"/></svg>
+              <span>连接不上？</span>
+              <button style="color:var(--teal);font-weight:600" onclick="toast('已通知服务员，将尽快上门帮助（演示）')">联系服务员上门帮助</button>
+            </div>
+
+            <details class="card" style="margin-bottom:18px">
+              <summary style="font-size:13.5px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;list-style:none">认证连接流程与接口说明 <svg class="ic" style="font-size:15px;color:var(--ink-3)"><use href="#i-refresh" xlink:href="#i-refresh"/></svg></summary>
+              <div style="margin-top:12px">
+                <div style="font-size:12px;font-weight:700;color:var(--teal-600);margin-bottom:8px">三方联动时序（示意）</div>
+                <div class="mini-flow">
+                  <div class="mf-row"><span class="mf-n">1</span><div class="mf-body"><b>小程序端</b> 按房间 0502 自动带出 SSID 与密码<span class="mf-mono">room → xnzz / xnzz@2022</span></div></div>
+                  <div class="mf-row"><span class="mf-n">2</span><div class="mf-body"><b>小程序端</b> 直连获取终端连接信息（免签名）<span class="mf-mono">GET /api/v1/auth/terminal</span></div></div>
+                  <div class="mf-row"><span class="mf-n">3</span><div class="mf-body"><b>界面展示</b> 正在跳转至宽带认证网关<span class="mf-mono">302 redirect → 认证网关</span></div></div>
+                  <div class="mf-row"><span class="mf-n">4</span><div class="mf-body"><b>我方服务端</b> HMAC-SHA256 签名，发起第三方认证 / 自动开户<span class="mf-mono">POST /api/v1/auth/thirdparty · api_secret 仅存服务端</span></div></div>
+                  <div class="mf-row"><span class="mf-n">5</span><div class="mf-body"><b>网关平台</b> 认证通过放行，终端可正常上网<span class="mf-mono">status=Up · 会话建立</span></div></div>
+                </div>
+                <div style="margin-top:10px;font-size:11.5px;color:var(--ink-3);background:var(--teal-50);border-radius:10px;padding:10px 12px;line-height:1.75">
+                  接入要点：① api_secret 不得下发到小程序端，签名一律在服务端完成；② 终端刚接入时 MAC 可能为空，可稍后重试；③ X-Timestamp 与服务端偏差 ≤ ±300 秒，X-Nonce 60 秒内不可重复；④ 结果以 code=0 判断（错误码见《网关认证API文档》第 4 章）。
+                </div>
+              </div>
+            </details>
+          </div>
+
+          <!-- 认证跳转覆盖层 -->
+          <div class="jump-layer" id="jumpLayer">
+            <div class="jump-card">
+              <div class="jc-ic"><svg class="ic"><use href="#i-globe" xlink:href="#i-globe"/></svg></div>
+              <div class="jc-title">正在跳转至宽带认证网关</div>
+              <div class="jc-sub">将完成客房宽带认证，认证通过后自动返回本页并联网</div>
+              <div class="jc-url" id="jumpUrl">https://gw.example.com/api/v1/auth/landing?room=0502&amp;ssid=xnzz</div>
+              <div class="jc-bar"><i id="jumpBar"></i></div>
+            </div>
+          </div>
+        </section>
+        <!-- ===== 视图：停车服务 ===== -->
+        <section class="view" id="view-parking">
+          <div class="ph-header">
+            <button class="back" onclick="goHome()"><svg class="ic"><use href="#i-back" xlink:href="#i-back"/></svg></button>
+            <h2>停车服务</h2>
+            <span class="sub">免费停车登记</span>
+            <button class="menu" onclick="toast('更多（演示）')"><span style="display:flex;gap:3px"><i style="width:4px;height:4px;border-radius:50%;background:currentColor"></i><i style="width:4px;height:4px;border-radius:50%;background:currentColor"></i><i style="width:4px;height:4px;border-radius:50%;background:currentColor"></i></span></button>
+          </div>
+          <div class="view-scroll">
+            <div class="parking-hero">
+              <div class="ph-left">
+                <div class="ph-title">车牌登记</div>
+                <div class="ph-sub">登记车牌，享酒店免费停车服务</div>
+                <div class="ph-line"></div>
+              </div>
+              <div class="ph-car"><svg class="ic" style="width:1em;height:1em"><use href="#i-car" xlink:href="#i-car"/></svg></div>
+            </div>
+
+            <div class="p-form">
+              <div class="pf-room"><span class="k"><svg class="ic"><use href="#i-lock" xlink:href="#i-lock"/></svg>所住房间</span><span class="v">0502</span></div>
+              <div class="field">
+                <div class="f-label">车牌号码 <span class="req">*</span></div>
+                <div class="input-box">
+                  <select class="box fixed" id="plateProv" style="appearance:none;width:52px" aria-label="省份简称">
+                    <option>闽</option><option>粤</option><option>京</option><option>沪</option><option>苏</option><option>浙</option><option>鲁</option><option>川</option><option>鄂</option><option>湘</option>
+                  </select>
+                  <span class="sep">·</span>
+                  <input class="box" id="plateLetter" maxlength="1" placeholder="A" aria-label="发牌机关字母" style="width:36px">
+                  <span class="sep">·</span>
+                  <input class="box" id="plateNum" maxlength="6" placeholder="309760" aria-label="车牌号码" style="width:130px;letter-spacing:5px">
+                </div>
+                <div class="p-note"><svg class="ic" style="font-size:15px"><use href="#i-warn" xlink:href="#i-warn"/></svg><span>车牌一经提交，停车道闸将自动识别放行；入住期间可随时返回本页修改车牌。</span></div>
+              </div>
+              <button class="btn primary" onclick="submitPlate()">车牌登记</button>
+            </div>
+
+            <div class="success-hero" id="parkOk" style="display:none">
+              <div class="sh-ic"><svg class="ic"><use href="#i-check" xlink:href="#i-check"/></svg></div>
+              <div class="sh-title">登记成功</div>
+              <div class="sh-sub">车牌 <b id="okPlate">闽A·309760</b> 已登记至房间 0502，进出停车场道闸自动识别放行，享免费停车。</div>
+              <div class="sh-meta"><span>房间 0502</span><span id="okPlate2">闽A·309760</span><span>自动识别放行</span></div>
+            </div>
+
+            <div class="card" style="margin-bottom:18px">
+              <div class="card-title"><svg class="ic" style="font-size:15px;color:var(--teal)"><use href="#i-location" xlink:href="#i-location"/></svg>停车指引</div>
+              <div style="font-size:12.5px;color:var(--ink-2);margin-top:9px;line-height:2">
+                · 停车场入口位于酒店东侧，道闸自动识别已登记车牌<br>
+                · 免费时段：入住期间（以退房时间为准）<br>
+                · 新能源车辆可在负一层使用充电桩，扫码启动
+              </div>
+            </div>
+          </div>
+
+          <!-- 确认弹窗 -->
+          <div class="mask" id="plateMask">
+            <div class="modal">
+              <div class="m-title">请确认是否登记此车牌号</div>
+              <div class="m-sub">提交后将同步至停车管理系统</div>
+              <div class="m-value" id="confirmPlate">闽A·309760</div>
+              <div class="m-actions">
+                <button class="m-btn ghost" onclick="closePlateModal()">返回修改</button>
+                <button class="m-btn solid" onclick="confirmPlate()">提交</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ===== 视图：AI助手 ===== -->
+        <section class="view" id="view-ai">
+          <div class="ai-head">
+            <div class="ah-name"><span class="avatar"><svg class="ic"><use href="#i-ai" xlink:href="#i-ai"/></svg></span>云居管家AI助手</div>
+            <div class="ah-sub">送物、打扫、WiFi、停车都可以找我</div>
+            <span class="ah-right"><svg class="ic" style="font-size:11px"><use href="#i-shield" xlink:href="#i-shield"/></svg> 安保说明</span>
+          </div>
+          <div class="chat-body">
+            <div class="chat-msgs" id="chatMsgs">
+              <div class="his-divider">以上为历史消息</div>
+              <div class="bubble bot" data-welcome>
+                <div class="b-avatar"><svg class="ic"><use href="#i-ai" xlink:href="#i-ai"/></svg></div>
+                <div class="b-content">
+                  <span class="b-name">云居管家AI助手</span>
+                  <div class="b-text">您好，我是云居管家AI助手，送物、打扫、WiFi、停车等问题都可以问我～<br>以下快捷问题与功能入口由「管理平台 · AI问答」统一维护。</div>
+                </div>
+              </div>
+            </div>
+            <div class="quick-row" id="quickRow"></div>
+            <div class="ai-feats" id="aiFeats"></div>
+          </div>
+          <div class="ai-input">
+            <div class="ai-row">
+              <input class="ai-field" id="aiInput" placeholder="请输入需求或问题，我来为您解答~" onkeydown="if(event.key==='Enter')sendAI()">
+              <button class="ai-call" onclick="toast('正在拨打前台电话 0591-8765 4321（演示）')"><svg class="ic"><use href="#i-phone" xlink:href="#i-phone"/></svg></button>
+              <button class="ai-send" onclick="sendAI()"><svg class="ic"><use href="#i-send" xlink:href="#i-send"/></svg></button>
+            </div>
+            <div class="ai-foot">回答内容均由AI生成 · 由管理平台问答库驱动</div>
+          </div>
+          <nav class="bottom-nav">
+            <button class="bn-item" data-nav="home" onclick="goRoot('home',this)"><svg class="ic"><use href="#i-home" xlink:href="#i-home"/></svg><span>首页</span><span class="bn-dot"></span></button>
+            <button class="bn-item active" data-nav="ai" onclick="goRoot('ai',this)"><svg class="ic"><use href="#i-ai" xlink:href="#i-ai"/></svg><span>AI助手</span><span class="bn-dot"></span></button>
+            <button class="bn-item" data-nav="mine" onclick="goRoot('mine',this)"><svg class="ic"><use href="#i-user" xlink:href="#i-user"/></svg><span>我的</span><span class="bn-dot"></span></button>
+          </nav>
+        </section>
+
+        <!-- ===== 视图：我的 ===== -->
+        <section class="view" id="view-mine">
+          <div class="mine-hero">
+            <div class="m-avatar"><svg class="ic"><use href="#i-user" xlink:href="#i-user"/></svg></div>
+            <div>
+              <div class="m-name">云居伴旅会员</div>
+              <div class="m-room">星焕9号酒店 · 0502 房间 · 2026-10-26 入住</div>
+            </div>
+          </div>
+          <div class="view-scroll">
+            <div class="mine-list">
+              <div class="mine-item" onclick="toast('我的订单（演示）')"><svg class="ic"><use href="#i-doc" xlink:href="#i-doc"/></svg>我的订单<svg class="ic mi-arrow"><use href="#i-back" xlink:href="#i-back"/></svg></div>
+              <div class="mine-item" onclick="toast('我的服务（演示）')"><svg class="ic"><use href="#i-sparkle" xlink:href="#i-sparkle"/></svg>我的服务<svg class="ic mi-arrow"><use href="#i-back" xlink:href="#i-back"/></svg></div>
+              <div class="mine-item" onclick="toast('发票助手（演示）')"><svg class="ic"><use href="#i-edit" xlink:href="#i-edit"/></svg>发票助手<svg class="ic mi-arrow"><use href="#i-back" xlink:href="#i-back"/></svg></div>
+              <div class="mine-item" onclick="toast('正在拨打前台 0591-8765 4321（演示）')"><svg class="ic"><use href="#i-phone" xlink:href="#i-phone"/></svg>联系前台<svg class="ic mi-arrow"><use href="#i-back" xlink:href="#i-back"/></svg></div>
+              <div class="mine-item" onclick="toast('云居伴旅 · 智慧客房服务平台（演示）')"><svg class="ic"><use href="#i-globe" xlink:href="#i-globe"/></svg>关于云居伴旅<svg class="ic mi-arrow"><use href="#i-back" xlink:href="#i-back"/></svg></div>
+            </div>
+          </div>
+          <nav class="bottom-nav">
+            <button class="bn-item" data-nav="home" onclick="goRoot('home',this)"><svg class="ic"><use href="#i-home" xlink:href="#i-home"/></svg><span>首页</span><span class="bn-dot"></span></button>
+            <button class="bn-item" data-nav="ai" onclick="goRoot('ai',this)"><svg class="ic"><use href="#i-ai" xlink:href="#i-ai"/></svg><span>AI助手</span><span class="bn-dot"></span></button>
+            <button class="bn-item active" data-nav="mine" onclick="goRoot('mine',this)"><svg class="ic"><use href="#i-user" xlink:href="#i-user"/></svg><span>我的</span><span class="bn-dot"></span></button>
+          </nav>
+        </section>
+      </div>
+      <div class="toast" id="toast"></div>
+    </div></div></div>
+    <aside class="side-panel">
+      <div class="panel-card">
+        <h3>原型亮点 <span class="tag">交互可点</span></h3>
+        <div class="feature-row">
+          <div class="f-ic"><svg class="ic"><use href="#i-wifi" xlink:href="#i-wifi"/></svg></div>
+          <div class="f-main">
+            <div class="f-title">WiFi 一键认证连接</div>
+            <div class="f-desc">按房间号自动带出 SSID 与密码；接入宽带认证网关，界面展示认证跳转，服务端签名完成认证，认证后即可上网。</div>
+          </div>
+        </div>
+        <div class="feature-row">
+          <div class="f-ic"><svg class="ic"><use href="#i-car" xlink:href="#i-car"/></svg></div>
+          <div class="f-main">
+            <div class="f-title">停车服务登记</div>
+            <div class="f-desc">房间号 + 车牌登记 → 确认提交，停车道闸自动识别放行，享免费停车。</div>
+          </div>
+        </div>
+        <div class="feature-row">
+          <div class="f-ic"><svg class="ic"><use href="#i-ai" xlink:href="#i-ai"/></svg></div>
+          <div class="f-main">
+            <div class="f-title">AI 助手问答管理</div>
+            <div class="f-desc">「管理平台 · AI问答」维护问答库，小程序端云居管家 AI 实时应答，快捷问题与功能入口同步生效。</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel-card">
+        <h3>WiFi 认证连接流程</h3>
+        <div class="flow-box">
+          <div class="flow-title"><svg class="ic" style="font-size:14px"><use href="#i-wifi" xlink:href="#i-wifi"/></svg>小程序 / 服务端 / 网关 三方联动（示意）</div>
+          <div class="flow-node"><span class="fn-n">1</span><div class="fn-body"><span class="fn-title">按房间号取网络信息</span><span class="fn-role">小程序端</span><div class="fn-desc">进入「Wifi密码」，按房间 0502 自动带出 SSID 与密码，生成认证账号</div><div class="fn-mono">room 0502 → xnzz / xnzz@2022</div></div></div>
+          <div class="flow-node"><span class="fn-n">2</span><div class="fn-body"><span class="fn-title">获取终端连接信息</span><span class="fn-role">小程序端 · 免签名直连</span><div class="fn-desc">获取终端 IP / MAC / SSID，作为认证锚点</div><div class="fn-mono">GET /api/v1/auth/terminal</div></div></div>
+          <div class="flow-node"><span class="fn-n">3</span><div class="fn-body"><span class="fn-title">展示认证跳转</span><span class="fn-role">小程序端 · 界面</span><div class="fn-desc">界面展示「正在跳转至宽带认证网关」，随后自动回跳</div><div class="fn-mono">302 redirect → 认证网关 landing</div></div></div>
+          <div class="flow-node"><span class="fn-n">4</span><div class="fn-body"><span class="fn-title">服务端签名发起认证</span><span class="fn-role">我方服务端</span><div class="fn-desc">HMAC-SHA256 签名调用第三方认证，免密认证 / 自动开户（created=true）</div><div class="fn-mono">POST /api/v1/auth/thirdparty · api_secret 仅存服务端</div></div></div>
+          <div class="flow-node"><span class="fn-n">5</span><div class="fn-body"><span class="fn-title">网关放行 · 联网成功</span><span class="fn-role">网关认证平台</span><div class="fn-desc">认证通过后终端放行，会话状态 Up，可正常上网；可调用会话查询校验</div><div class="fn-mono">GET /api/v1/session（可选）</div></div></div>
+        </div>
+        <div class="flow-note">说明：GetTerminalInfo 与 ScanLanding 免签名；其余接口（含 ThirdPartyAuth）必须由服务端携带 Authorization / X-Timestamp / X-Nonce / X-Sign 调用，签名算法见《网关认证API文档》1.3。</div>
+      </div>
+
+      <div class="panel-card">
+        <h3>网关认证接口对照</h3>
+        <table class="api-table">
+          <thead><tr><th>接口</th><th>方法 / 路径</th><th>签名</th><th>用途</th></tr></thead>
+          <tbody>
+            <tr><td>GetTerminalInfo</td><td><span class="mono">GET /api/v1/auth/terminal</span></td><td><span class="sig no">免签名</span></td><td>获取终端 IP/MAC/SSID（供认证使用）</td></tr>
+            <tr><td>ThirdPartyAuth</td><td><span class="mono">POST /api/v1/auth/thirdparty</span></td><td><span class="sig yes">服务端签名</span></td><td>免密认证上线、自动开户</td></tr>
+            <tr><td>QuerySessions</td><td><span class="mono">GET /api/v1/session</span></td><td><span class="sig yes">签名</span></td><td>查询在线会话，校验联网状态</td></tr>
+          </tbody>
+        </table>
+        <div class="panel-note">
+          <b>接入注意：</b>① api_secret 不得下发至小程序端，签名一律在服务端完成；② 终端刚接入时 MAC 可能为空，可稍后重试 GetTerminalInfo；③ X-Timestamp 偏差 ≤ ±300 秒、X-Nonce 60 秒内不可重复；④ 结果以 code=0 判断，错误码见文档第 4 章；⑤ 认证类接口单终端限流 10 次/分钟。
+        </div>
+      </div>
+    </aside>
+  </div>
+</div>
+<!-- ===== 管理平台 · AI问答管理 ===== -->
+<div class="admin" id="admin">
+  <div class="admin-top">
+    <div class="at-brand"><span class="mark"><svg class="ic"><use href="#i-wifi" xlink:href="#i-wifi"/></svg></span>云居伴旅 · 管理平台</div>
+    <span class="at-crumb">智能客服 / AI问答管理</span>
+    <div class="spacer"></div>
+    <button class="back-app" onclick="showApp()"><svg class="ic" style="font-size:14px"><use href="#i-back" xlink:href="#i-back"/></svg>返回小程序原型</button>
+  </div>
+  <div class="admin-body">
+    <div class="admin-hero">
+      <div class="ah-ic"><svg class="ic"><use href="#i-ai" xlink:href="#i-ai"/></svg></div>
+      <div style="flex:1;min-width:0">
+        <h2>AI 问答管理</h2>
+        <p>此处维护的问答内容将同步至小程序端「云居管家AI助手」：启用中的问答作为快捷问题与应答展示在端上，停用后不再展示；用户直接提问时按问题匹配返回对应应答。</p>
+      </div>
+    </div>
+    <div class="stats">
+      <div class="stat-card"><div class="st-num" id="stTotal">0</div><div class="st-label">问答总数</div></div>
+      <div class="stat-card"><div class="st-num" id="stOn">0</div><div class="st-label">启用中</div></div>
+      <div class="stat-card"><div class="st-num" id="stOff">0</div><div class="st-label">停用中</div></div>
+    </div>
+    <div class="admin-card">
+      <div class="ac-head"><h3>新增问答</h3><span class="hint">保存后立即同步至小程序端</span></div>
+      <div class="qa-form">
+        <input id="aqQ" placeholder="问题，如：WiFi密码是多少？">
+        <textarea id="aqA" placeholder="应答内容，支持换行"></textarea>
+        <select id="aqCat">
+          <option>常用咨询</option><option>客房服务</option><option>设施政策</option><option>安保说明</option><option>预定政策</option><option>租期说明</option>
+        </select>
+        <button class="btn-sm teal qf-submit" onclick="addQA()"><svg class="ic" style="font-size:14px"><use href="#i-plus" xlink:href="#i-plus"/></svg>保存并启用</button>
+      </div>
+    </div>
+    <div class="admin-card">
+      <div class="ac-head"><h3>问答列表</h3><span class="hint">停用后小程序端不再展示该条问答</span></div>
+      <div class="admin-table-wrap">
+        <table class="admin-table">
+          <thead><tr><th style="width:24%">问题</th><th style="width:36%">应答内容</th><th style="width:11%">分类</th><th style="width:10%">状态</th><th style="width:19%">操作</th></tr></thead>
+          <tbody id="qaBody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="admin-foot">原型演示：问答数据保存在页面内存中，刷新后恢复初始数据；生产环境请接入管理平台后端持久化。</div>
+  </div>
+</div>
+<button class="float-admin" onclick="showAdmin()">管理平台 · AI问答</button>
+<script>
+(function(){
+"use strict";
+
+/* ===== 模拟数据 ===== */
+var ROOM = { id:"0502", ssid:"xnzz", pwd:"xnzz@2022", userId:"yh_0502_20261026" };
+var TERMINAL = { ip:"10.1.3.58", mac:"AA:BB:CC:DD:EE:FF", ssid:"xnzz", authStatus:"Init" };
+
+var QA_DEFAULT = [
+ { id:"q1", q:"宾馆简介", a:"星焕9号酒店坐落于福州市晋安区晋安湖畔，紧邻东二环泰禾广场商圈，距福州火车站约10分钟车程，是一家集商务与休闲于一体的城市度假酒店，由「云居伴旅」提供智慧客房服务。", cat:"常用咨询", on:true, quick:true },
+ { id:"q2", q:"是拎包入住吗", a:"是的，房间内已备齐床品、洗漱用品、拖鞋、烧水壶等，拎包即可入住；如需加床或婴儿用品可联系前台。", cat:"客房服务", on:true, quick:true },
+ { id:"q3", q:"前台电话是多少？", a:"前台总机 0591-8765 4321，24小时为您服务；也可以点击本页右下角拨号按钮直接拨打。", cat:"常用咨询", on:true, quick:true },
+ { id:"q4", q:"WiFi密码是多少？", a:"您入住房间 0502 的 WiFi 名称为 xnzz，密码 xnzz@2022。建议直接到首页「Wifi密码」一键认证连接，免输密码，认证后即可上网。", cat:"客房服务", on:true, quick:true, jump:"wifi" },
+ { id:"q5", q:"酒店附近有地铁站吗？", a:"酒店距地铁2号线「紫阳站」约1.2公里，打车约5分钟、步行约15分钟；晋安湖公园步行即达。", cat:"常用咨询", on:true, quick:true },
+ { id:"q6", q:"设施政策", a:"健身中心 07:00-22:00 刷卡进入；自助洗衣房 24 小时免费；餐厅早餐 06:30-10:00；延迟退房视当日房态，最晚 14:00 前。", cat:"设施政策", on:true },
+ { id:"q7", q:"安保说明", a:"24小时保安在岗，大门密码门禁，公共区域与电梯 24 小时监控，晚归也请放心；出入时留意门禁状态，确保门锁正常关闭。", cat:"安保说明", on:true },
+ { id:"q8", q:"预定政策", a:"预订需提供证件副本（身份证/通行证/护照）及入住材料；预订押金为 2 个月租金，入住时自动转为租金/住宿押金；预订完成后取消不退押金。", cat:"预定政策", on:true },
+ { id:"q9", q:"租期说明", a:"本店支持长租与短租；长租按月计费，租期届满如需续租请提前 3 天联系前台确认房态。", cat:"租期说明", on:true },
+ { id:"q10", q:"停车怎么收费？", a:"入住期间免费停车：到首页「停车服务」登记车牌后，停车场道闸自动识别放行；退房后自动失效。", cat:"常用咨询", on:true, jump:"parking" }
+];
+var QA = QA_DEFAULT.map(function(x){ return Object.assign({}, x); });
+
+/* ===== 通用 ===== */
+var toastTimer;
+function toast(msg){
+  var t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(function(){ t.classList.remove('show'); }, 2200);
+}
+function escapeHtml(s){
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function copyText(t){
+  var ta=document.createElement('textarea');
+  ta.value=t; ta.style.position='fixed'; ta.style.opacity='0';
+  document.body.appendChild(ta); ta.select();
+  try{ document.execCommand('copy'); }catch(e){}
+  document.body.removeChild(ta);
+  toast('已复制：'+t);
+}
+
+/* ===== 视图切换 ===== */
+function showView(name){
+  var views=document.querySelectorAll('.view');
+  for(var i=0;i<views.length;i++){ views[i].classList.remove('active'); }
+  document.getElementById('view-'+name).classList.add('active');
+}
+function setNav(name){
+  var items=document.querySelectorAll('.bn-item');
+  for(var i=0;i<items.length;i++){ items[i].classList.toggle('active', items[i].getAttribute('data-nav')===name); }
+}
+function goHome(){ showView('home'); }
+function goWifi(){ showView('wifi'); }
+function goParking(){ showView('parking'); }
+function goRoot(name){
+  showView(name); setNav(name);
+}
+function switchCat(name, el){
+  var tabs=document.querySelectorAll('.cat-tab');
+  for(var i=0;i<tabs.length;i++){ tabs[i].classList.toggle('active', tabs[i]===el); }
+  var panels=document.querySelectorAll('.cat-panel');
+  for(var j=0;j<panels.length;j++){ panels[j].classList.remove('active'); }
+  document.getElementById('cat-'+name).classList.add('active');
+}
+
+/* ===== 原型 / 管理平台 模式切换 ===== */
+function showAdmin(){
+  document.querySelector('.stage').style.display='none';
+  document.querySelector('.float-admin').style.display='none';
+  document.getElementById('admin').classList.add('show');
+  window.scrollTo(0,0);
+}
+function showApp(){
+  document.querySelector('.stage').style.display='';
+  document.querySelector('.float-admin').style.display='';
+  document.getElementById('admin').classList.remove('show');
+  window.scrollTo(0,0);
+}
+
+/* ===== WiFi 一键认证连接（模拟网关认证API联调流程） ===== */
+var authRunning=false, authDone=false, authTimer=null;
+function setStep(n){
+  var st1=document.getElementById('st1'), st2=document.getElementById('st2'), st3=document.getElementById('st3');
+  var sl1=document.getElementById('sl1'), sl2=document.getElementById('sl2');
+  st1.classList.toggle('active', n===1); st1.classList.toggle('done', n>1);
+  st2.classList.toggle('active', n===2); st2.classList.toggle('done', n>2);
+  st3.classList.toggle('active', n===3); st3.classList.toggle('done', false);
+  sl1.classList.toggle('done', n>1);
+  sl2.classList.toggle('done', n>2);
+}
+function logStep(icon, title, desc){
+  var body=document.getElementById('apBody');
+  if(body.querySelector('.ap-empty')){ body.innerHTML=''; }
+  var row=document.createElement('div'); row.className='ap-log';
+  var icHtml = icon==='run' ? '<span class="spin"></span>' : '<svg class="ic"><use href="#i-check" xlink:href="#i-check"/></svg>';
+  row.innerHTML='<div class="log-ic '+icon+'">'+icHtml+'</div><div class="log-main"><div class="log-title">'+escapeHtml(title)+'</div><div class="log-desc">'+escapeHtml(desc)+'</div></div>';
+  body.appendChild(row);
+}
+function showJump(){
+  document.getElementById('jumpLayer').classList.add('show');
+  var bar=document.getElementById('jumpBar'); bar.style.width='0%';
+  setTimeout(function(){ bar.style.width='100%'; }, 60);
+}
+function hideJump(){ document.getElementById('jumpLayer').classList.remove('show'); }
+function setGwBadge(text, cls){
+  var b=document.getElementById('gwBadge'); b.textContent=text; b.className='badge '+cls;
+}
+function setFlowBadge(text, cls){
+  var b=document.getElementById('flowBadge'); b.textContent=text; b.className='badge '+cls;
+}
+function startAuth(){
+  if(authDone){ toast('当前已认证连接，可直接上网'); return; }
+  if(authRunning){ toast('认证进行中，请稍候'); return; }
+  authRunning=true;
+  var btn=document.getElementById('authBtn');
+  btn.disabled=true;
+  btn.innerHTML='<span class="spin" style="border-color:rgba(255,255,255,.4);border-top-color:#fff"></span>认证连接中…';
+  setStep(1); setGwBadge('获取终端中','wait'); setFlowBadge('获取终端信息','wait');
+  logStep('run','调用 GetTerminalInfo（免签名直连）','GET /api/v1/auth/terminal · 获取终端 IP / MAC / SSID');
+  setTimeout(function(){
+    setGwBadge('已获取终端','ok');
+    logStep('ok','终端信息获取成功','IP '+TERMINAL.ip+' · MAC '+TERMINAL.mac+' · SSID '+TERMINAL.ssid);
+    setStep(2); setFlowBadge('认证跳转中','wait');
+    showJump();
+    setTimeout(function(){
+      hideJump();
+      setFlowBadge('服务端认证中','wait');
+      logStep('run','界面已展示认证跳转','302 redirect → 宽带认证网关，认证通过后自动回跳本页');
+      logStep('run','服务端签名调用 ThirdPartyAuth','POST /api/v1/auth/thirdparty · HMAC-SHA256 · api_secret 仅存服务端');
+      setTimeout(function(){
+        authRunning=false; authDone=true;
+        setStep(3); setGwBadge('已认证','ok'); setFlowBadge('认证成功','ok');
+        logStep('ok','认证成功，网关放行','会话状态 Up · 已连接 xnzz，可正常上网');
+        btn.disabled=false;
+        btn.innerHTML='<svg class="ic"><use href="#i-check" xlink:href="#i-check"/></svg>已认证连接 · 可上网';
+        toast('认证成功，已连接 WiFi，可正常上网');
+      }, 1500);
+    }, 1700);
+  }, 1200);
+}
+
+/* ===== 停车服务 ===== */
+function submitPlate(){
+  var prov=document.getElementById('plateProv').value;
+  var letter=document.getElementById('plateLetter').value.trim().toUpperCase();
+  var num=document.getElementById('plateNum').value.trim().toUpperCase();
+  if(!letter){ toast('请填写发牌机关字母（如 A）'); return; }
+  if(num.length<5){ toast('请填写完整的车牌号码（5-6 位）'); return; }
+  var plate=prov+letter+'·'+num;
+  document.getElementById('confirmPlate').textContent=plate;
+  document.getElementById('plateMask').classList.add('show');
+}
+function closePlateModal(){ document.getElementById('plateMask').classList.remove('show'); }
+function confirmPlate(){
+  var plate=document.getElementById('confirmPlate').textContent;
+  document.getElementById('plateMask').classList.remove('show');
+  var ok=document.getElementById('parkOk');
+  ok.style.display='block';
+  document.getElementById('okPlate').textContent=plate;
+  document.getElementById('okPlate2').textContent=plate;
+  setTimeout(function(){ ok.scrollIntoView({behavior:'smooth', block:'center'}); }, 120);
+  toast('车牌登记成功，享免费停车');
+}
+
+/* ===== AI 助手 ===== */
+function qaById(id){
+  for(var i=0;i<QA.length;i++){ if(QA[i].id===id) return QA[i]; }
+  return null;
+}
+function featIcon(cat){
+  if(cat==='设施政策') return 'i-doc';
+  if(cat==='安保说明') return 'i-shield';
+  if(cat==='预定政策') return 'i-doc';
+  return 'i-clock';
+}
+function renderQuick(){
+  var row=document.getElementById('quickRow'); row.innerHTML='';
+  QA.forEach(function(x){
+    if(!x.on || !x.quick) return;
+    var b=document.createElement('button'); b.className='quick-chip'; b.textContent=x.q;
+    b.setAttribute('aria-label','快捷提问：'+x.q);
+    b.onclick=function(){ askQA(x.id); };
+    row.appendChild(b);
+  });
+  var feats=document.getElementById('aiFeats'); feats.innerHTML='';
+  QA.forEach(function(x){
+    if(!x.on) return;
+    if(['设施政策','安保说明','预定政策','租期说明'].indexOf(x.cat)<0) return;
+    var b=document.createElement('button'); b.className='ai-feat';
+    b.innerHTML='<svg class="ic"><use href="#'+featIcon(x.cat)+'" xlink:href="#'+featIcon(x.cat)+'"/></svg><span>'+escapeHtml(x.q)+'</span>';
+    b.onclick=function(){ askQA(x.id); };
+    feats.appendChild(b);
+  });
+}
+function addMsg(role, html){
+  var wrap=document.getElementById('chatMsgs');
+  var b=document.createElement('div'); b.className='bubble '+role;
+  var avatar = role==='bot' ? 'i-ai' : 'i-user';
+  var name = role==='bot' ? '云居管家AI助手' : '我';
+  b.innerHTML='<div class="b-avatar"><svg class="ic"><use href="#'+avatar+'" xlink:href="#'+avatar+'"/></svg></div><div class="b-content"><span class="b-name">'+name+'</span><div class="b-text">'+html+'</div></div>';
+  wrap.appendChild(b);
+  wrap.scrollTop=wrap.scrollHeight;
+}
+function addTyping(){
+  var wrap=document.getElementById('chatMsgs');
+  var t=document.createElement('div'); t.className='bubble bot'; t.id='typingMsg';
+  t.innerHTML='<div class="b-avatar"><svg class="ic"><use href="#i-ai" xlink:href="#i-ai"/></svg></div><div class="b-content"><span class="b-name">云居管家AI助手</span><div class="b-text"><span class="spin"></span> 正在思考…</div></div>';
+  wrap.appendChild(t);
+  wrap.scrollTop=wrap.scrollHeight;
+}
+function removeTyping(){
+  var t=document.getElementById('typingMsg'); if(t) t.remove();
+}
+function askQA(id){
+  var x=qaById(id);
+  if(!x || !x.on){ toast('该问答已在管理平台停用'); return; }
+  addMsg('user', escapeHtml(x.q));
+  addTyping();
+  setTimeout(function(){
+    removeTyping();
+    var html=escapeHtml(x.a);
+    if(x.jump==='wifi'){ html+='<div class="b-action"><button class="chip-btn" onclick="goWifi()">去一键认证 <svg class="ic" style="font-size:13px"><use href="#i-wifi" xlink:href="#i-wifi"/></svg></button></div>'; }
+    if(x.jump==='parking'){ html+='<div class="b-action"><button class="chip-btn" onclick="goParking()">去登记车牌 <svg class="ic" style="font-size:13px"><use href="#i-car" xlink:href="#i-car"/></svg></button></div>'; }
+    addMsg('bot', html);
+  }, 750);
+}
+function sendAI(){
+  var inp=document.getElementById('aiInput');
+  var v=inp.value.trim();
+  if(!v) return;
+  inp.value='';
+  addMsg('user', escapeHtml(v));
+  addTyping();
+  setTimeout(function(){
+    removeTyping();
+    var hit=null;
+    for(var i=0;i<QA.length;i++){ if(QA[i].on && v.indexOf(QA[i].q)>-1){ hit=QA[i]; break; } }
+    if(hit){
+      var html=escapeHtml(hit.a);
+      if(hit.jump==='wifi'){ html+='<div class="b-action"><button class="chip-btn" onclick="goWifi()">去一键认证 <svg class="ic" style="font-size:13px"><use href="#i-wifi" xlink:href="#i-wifi"/></svg></button></div>'; }
+      addMsg('bot', html);
+    } else {
+      addMsg('bot','这个问题我还没有收录，已为您转人工处理，前台同事会尽快联系您～（演示）');
+    }
+  }, 900);
+}
+
+/* ===== 管理平台 · AI问答管理 ===== */
+function renderAdmin(){
+  var body=document.getElementById('qaBody'); body.innerHTML='';
+  QA.forEach(function(x){
+    var tr=document.createElement('tr');
+    var statusHtml='<span class="tag-mini '+(x.on?'on':'off')+'">'+(x.on?'启用中':'已停用')+'</span>';
+    tr.innerHTML='<td class="qa-q">'+escapeHtml(x.q)+'</td>'+
+      '<td class="qa-a">'+escapeHtml(x.a)+'</td>'+
+      '<td><span class="tag-mini cat">'+escapeHtml(x.cat)+'</span></td>'+
+      '<td>'+statusHtml+'</td>'+
+      '<td><button class="op-btn" onclick="toggleQA(\''+x.id+'\')">'+(x.on?'停用':'启用')+'</button><button class="op-btn danger" onclick="delQA(\''+x.id+'\')">删除</button></td>';
+    body.appendChild(tr);
+  });
+  document.getElementById('stTotal').textContent=QA.length;
+  document.getElementById('stOn').textContent=QA.filter(function(x){return x.on;}).length;
+  document.getElementById('stOff').textContent=QA.filter(function(x){return !x.on;}).length;
+}
+function toggleQA(id){
+  var x=qaById(id); if(!x) return;
+  x.on=!x.on;
+  renderAdmin(); renderQuick();
+  toast(x.on?'已启用，小程序端已同步':'已停用，小程序端不再展示该问答');
+}
+function delQA(id){
+  QA=QA.filter(function(x){ return x.id!==id; });
+  renderAdmin(); renderQuick();
+  toast('已删除该问答');
+}
+function addQA(){
+  var q=document.getElementById('aqQ').value.trim();
+  var a=document.getElementById('aqA').value.trim();
+  var cat=document.getElementById('aqCat').value;
+  if(!q || !a){ toast('请填写问题与应答内容'); return; }
+  QA.unshift({ id:'q'+Date.now(), q:q, a:a, cat:cat, on:true, quick:false });
+  document.getElementById('aqQ').value='';
+  document.getElementById('aqA').value='';
+  renderAdmin(); renderQuick();
+  toast('已保存并同步至小程序端');
+}
+
+/* ===== 初始化 ===== */
+renderQuick();
+renderAdmin();
+
+/* 暴露给内联事件与原型演示使用 */
+window.toast = toast;
+window.copyText = copyText;
+window.goHome = goHome;
+window.goWifi = goWifi;
+window.goParking = goParking;
+window.goRoot = goRoot;
+window.switchCat = switchCat;
+window.showAdmin = showAdmin;
+window.showApp = showApp;
+window.startAuth = startAuth;
+window.submitPlate = submitPlate;
+window.closePlateModal = closePlateModal;
+window.confirmPlate = confirmPlate;
+window.sendAI = sendAI;
+window.toggleQA = toggleQA;
+window.delQA = delQA;
+window.addQA = addQA;
+})();
+</script>
+</body>
+</html>
