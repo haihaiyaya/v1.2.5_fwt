@@ -1143,7 +1143,7 @@ body {
 .cr-go { display: flex; align-items: center; gap: 4px; }
 .cr-go input { width: 52px; padding: 5px 8px; border: 1px solid var(--border); border-radius: 6px; font-size: 12px; outline: none; text-align: center; }
 
-.cr-detail-modal { width: 620px; }
+.cr-detail-modal { width: 760px; }
 .cr-detail-top { display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--border); padding: 4px 0 14px; margin-bottom: 10px; }
 .cr-detail-dir { font-size: 12px; color: var(--text-muted); }
 .cr-detail-dir b { font-size: 16px; color: var(--text); }
@@ -1153,6 +1153,44 @@ body {
 .cr-detail-grid .row .v { color: var(--text); text-align: right; }
 .cr-detail-full { grid-column: 1 / -1; }
 .cr-detail-full .v { text-align: left; line-height: 1.6; }
+
+/* 通话详情 v2（按截图重构） */
+.cd-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; border-bottom: 1px solid var(--border); padding: 4px 0 14px; }
+.cd-title { font-size: 15px; font-weight: 700; color: var(--text); }
+.cd-no { color: var(--primary); font-weight: 600; }
+.cd-head-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+.cd-time { font-size: 12px; color: var(--text-muted); }
+.cd-sec { padding: 14px 0; border-bottom: 1px solid #f1f5f9; }
+.cd-sec:last-child { border-bottom: none; padding-bottom: 2px; }
+.cd-sec-title { font-size: 13px; font-weight: 600; color: var(--text); display: flex; align-items: center; }
+.cd-sec-title::before { content: ''; width: 3px; height: 12px; background: var(--primary); border-radius: 2px; margin-right: 8px; }
+.cd-sec-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
+.cd-tag { font-size: 11px; padding: 2px 10px; border-radius: 4px; background: #f1f5f9; color: var(--text-secondary); white-space: nowrap; }
+.cd-tag.has { background: #dcfce7; color: #15803d; }
+.cd-3grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px 18px; }
+.cd-item { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.cd-item .k { font-size: 12px; color: var(--text-muted); }
+.cd-item .v { font-size: 13px; color: var(--text); word-break: break-all; }
+.cd-item .v.hl { color: var(--primary); font-weight: 600; }
+.cd-label-row { display: flex; gap: 16px; align-items: baseline; margin-bottom: 8px; }
+.cd-label-row:last-child { margin-bottom: 0; }
+.cd-label-row .k { font-size: 12px; color: var(--text-muted); width: 64px; flex-shrink: 0; }
+.cd-label-row .v { font-size: 13px; color: var(--text); }
+.cd-label-row .v.long { line-height: 1.6; }
+.cd-summary-line { font-size: 12px; color: var(--text-secondary); }
+.cd-sub-title { font-size: 12px; font-weight: 600; color: var(--text-secondary); margin: 12px 0 8px; }
+.cd-sub-title:first-child { margin-top: 0; }
+.cd-3grid + .cd-3grid { margin-top: 12px; }
+
+/* 通话原声录音播放器 */
+.cd-player { background: #f8fafc; border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; display: flex; align-items: center; gap: 12px; }
+.cd-play-btn { width: 34px; height: 34px; border-radius: 50%; background: var(--primary); color: #fff; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.cd-play-btn:hover { background: var(--primary-hover); }
+.cd-progress { flex: 1; height: 6px; border-radius: 3px; background: #e2e8f0; position: relative; cursor: pointer; }
+.cd-progress .bar { position: absolute; left: 0; top: 0; bottom: 0; width: 0%; background: var(--primary); border-radius: 3px; }
+.cd-player-time { font-size: 12px; color: var(--text-secondary); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.cd-rate { border: 1px solid var(--border); background: #fff; border-radius: 6px; font-size: 11px; padding: 3px 10px; cursor: pointer; color: var(--text-secondary); }
+.cd-rate:hover { color: var(--primary); border-color: var(--primary); }
 </style>
 </head>
 
@@ -5606,30 +5644,137 @@ function crResetFilter() {
 }
 
 // ===== 通话详情 =====
+let crPlayTimer = null;
+const crPlaySvg = '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 3 20 12 6 21 6 3"/></svg>';
+const crPauseSvg = '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>';
+
+function crDurationSec(str) {
+  const m = /^(\d+)分钟(\d+)秒$/.exec(str || '');
+  if (m) return parseInt(m[1], 10) * 60 + parseInt(m[2], 10);
+  const s = /^(\d+)秒$/.exec(str || '');
+  if (s) return parseInt(s[1], 10);
+  const mm = /^(\d+)分钟$/.exec(str || '');
+  if (mm) return parseInt(mm[1], 10) * 60;
+  return 0;
+}
+
+function crFmtSec(sec) {
+  const m = Math.floor(sec / 60);
+  const s = sec % 60;
+  return String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+}
+
 function crOpenDetail(id) {
   const c = crState.list.find(x => x.id === id);
   if (!c) return;
+  if (crPlayTimer) { clearInterval(crPlayTimer); crPlayTimer = null; }
   const body = document.getElementById('crDetailBody');
-  const row = (k, v) => '<div class="row"><span class="k">' + k + '</span><span class="v">' + v + '</span></div>';
   const dir = c.caller.length > 6 ? '呼入' : '呼出';
+  const line = c.biz === '内部呼叫' ? '内线' : '外线';
+  const guest = c.room ? '住店客人' : '外线客人';
+  const roomTxt = c.room ? c.room : '无(外线呼入)';
+  const queueResult = c.answer === '机器人转人工接听' ? '转接坐席成功' : (c.answer === '人工接听' ? '直接坐席接听' : 'AI接待（未转人工）');
+  const isAi = c.answer === '机器人接听' ? '是' : '否';
+  const isHuman = c.answer === '机器人接听' ? '否' : '是';
+  const summaryLine = guest + '·' + line + '·' + (c.room ? ('房间' + c.room) : '未绑定房间') + '·' + c.answer + '(' + c.duration + ')';
+  const no = 'CALL-' + c.date.replace(/-/g, '') + String(id).padStart(2, '0');
+  const totalSec = crDurationSec(c.duration);
+  const aiNo = '059188887777';
+  const item = (k, v, hl) => '<div class="cd-item"><span class="k">' + k + '</span><span class="v' + (hl ? ' hl' : '') + '">' + v + '</span></div>';
   body.innerHTML =
-    '<div class="cr-detail-top">' +
-      '<span class="cr-detail-dir">' + dir + ' · ' + c.date + ' ' + c.time + '</span>' +
-      '<span style="flex:1"></span>' + crEmotionTag(c.emotion) +
-      '<span class="cr-em ' + (c.order === '有客需单' ? 'angry' : 'normal') + '">' + c.order + '</span>' +
+    '<div class="cd-head">' +
+      '<div class="cd-title">通话记录详情 <span class="cd-no">#' + no + '</span></div>' +
+      '<div class="cd-head-right">' + crEmotionTag(c.emotion) + '<span class="cd-time">' + c.date + ' ' + c.time + '</span></div>' +
     '</div>' +
-    '<div class="cr-detail-grid">' +
-      row('内容分类', c.category) + row('内容概要', c.summary) +
-      row('房间号', c.room || '—') + row('呼叫业务', c.biz) +
-      row('主叫号码', c.caller) + row('被叫号码', c.callee) +
-      row('通话状态', c.status) + row('接听方式', c.answer) +
-      row('通话时长', c.duration) + row('情绪', crEmotionName(c.emotion)) +
-      '<div class="row cr-detail-full"><span class="k">通话内容概要</span><span class="v">' + lfEsc(c.detail) + '</span></div>' +
+    '<div class="cd-sec">' +
+      '<div class="cd-sec-title">通讯参数</div>' +
+      '<div class="cd-3grid" style="margin-top:10px;">' +
+        item('主叫号码', c.caller, true) + item('被叫号码', c.callee) + item('AI总机号码', aiNo) +
+        item('通话方向', dir) + item('通话状态', c.status) + item('线路类型', line) +
+      '</div>' +
+    '</div>' +
+    '<div class="cd-sec">' +
+      '<div class="cd-sec-head">' +
+        '<div class="cd-sec-title">诉求分类与任务工单</div>' +
+        '<span class="cd-tag' + (c.order === '有客需单' ? ' has' : '') + '">' + c.order + '</span>' +
+      '</div>' +
+      '<div class="cd-label-row"><span class="k">诉求分类</span><span class="v">' + lfEsc(c.category) + '</span></div>' +
+      '<div class="cd-label-row"><span class="k">内容概要</span><span class="v long">' + lfEsc(c.detail) + '</span></div>' +
+    '</div>' +
+    '<div class="cd-sec">' +
+      '<div class="cd-sec-head">' +
+        '<div class="cd-sec-title">更多通话明细</div>' +
+        '<span class="cd-summary-line">' + lfEsc(summaryLine) + '</span>' +
+      '</div>' +
+      '<div class="cd-sub-title">客情与位置</div>' +
+      '<div class="cd-3grid">' +
+        item('姓名', guest) + item('房间号', roomTxt) + item('线路类型', line + '电话') +
+      '</div>' +
+      '<div class="cd-sub-title">接待方式与质检指标</div>' +
+      '<div class="cd-3grid">' +
+        item('接听方式', c.answer) + item('通话时长', c.duration) + item('排队结果', queueResult) +
+      '</div>' +
+      '<div class="cd-3grid">' +
+        item('呼叫业务', c.biz) + item('是否AI接听', isAi) + item('是否人工接听', isHuman) +
+      '</div>' +
+    '</div>' +
+    '<div class="cd-sec">' +
+      '<div class="cd-sec-head">' +
+        '<div class="cd-sec-title">通话原声录音</div>' +
+        '<span class="cd-tag">立体双声道</span>' +
+      '</div>' +
+      '<div class="cd-player">' +
+        '<button class="cd-play-btn" id="crPlayBtn" onclick="crTogglePlay(this)">' + crPlaySvg + '</button>' +
+        '<div class="cd-progress" id="crProg" onclick="crSeek(event)"><div class="bar" id="crProgBar"></div></div>' +
+        '<span class="cd-player-time" id="crPlayTime" data-total="' + totalSec + '">00:00 / ' + crFmtSec(totalSec) + '</span>' +
+        '<button class="cd-rate" data-rate="1" onclick="crCycleRate(this)">1.0x</button>' +
+      '</div>' +
     '</div>';
   document.getElementById('crDetailOverlay').style.display = 'flex';
 }
 
+// 录音播放器（原型演示）
+function crTogglePlay(btn) {
+  const bar = document.getElementById('crProgBar');
+  const timeEl = document.getElementById('crPlayTime');
+  const totalSec = parseInt(timeEl.dataset.total || '0', 10);
+  if (crPlayTimer) {
+    clearInterval(crPlayTimer);
+    crPlayTimer = null;
+    btn.innerHTML = crPlaySvg;
+    return;
+  }
+  const rate = parseFloat(btn.parentElement.querySelector('.cd-rate').dataset.rate || '1');
+  crPlayTimer = setInterval(() => {
+    let cur = parseFloat(bar.style.width) || 0;
+    cur += 0.5 * rate;
+    if (cur >= 100) { cur = 100; clearInterval(crPlayTimer); crPlayTimer = null; btn.innerHTML = crPlaySvg; }
+    bar.style.width = cur + '%';
+    timeEl.textContent = crFmtSec(Math.round(cur / 100 * totalSec)) + ' / ' + crFmtSec(totalSec);
+  }, 200);
+  btn.innerHTML = crPauseSvg;
+  showToast('原型演示：正在播放模拟录音');
+}
+
+function crSeek(ev) {
+  const prog = document.getElementById('crProg');
+  const rect = prog.getBoundingClientRect();
+  const pct = Math.max(0, Math.min(100, (ev.clientX - rect.left) / rect.width * 100));
+  document.getElementById('crProgBar').style.width = pct + '%';
+  const total = parseInt(document.getElementById('crPlayTime').dataset.total || '0', 10);
+  document.getElementById('crPlayTime').textContent = crFmtSec(Math.round(pct / 100 * total)) + ' / ' + crFmtSec(total);
+}
+
+function crCycleRate(btn) {
+  const rates = ['0.75', '1', '1.25', '1.5'];
+  const cur = btn.dataset.rate || '1';
+  const next = rates[(rates.indexOf(cur) + 1) % rates.length];
+  btn.dataset.rate = next;
+  btn.textContent = (next === '1' ? '1.0' : next) + 'x';
+}
+
 function crCloseDetail() {
+  if (crPlayTimer) { clearInterval(crPlayTimer); crPlayTimer = null; }
   document.getElementById('crDetailOverlay').style.display = 'none';
 }
 
