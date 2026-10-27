@@ -1191,6 +1191,142 @@ body {
 .cd-player-time { font-size: 12px; color: var(--text-secondary); white-space: nowrap; font-variant-numeric: tabular-nums; }
 .cd-rate { border: 1px solid var(--border); background: #fff; border-radius: 6px; font-size: 11px; padding: 3px 10px; cursor: pointer; color: var(--text-secondary); }
 .cd-rate:hover { color: var(--primary); border-color: var(--primary); }
+
+/* ================= 人工通话实时界面 ================= */
+#page-livecall.active { display: flex; }
+.lc-wrap { flex: 1; display: flex; flex-direction: column; gap: 10px; min-height: 0; overflow: hidden; }
+.lc-header { background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 10px 16px;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; flex-shrink: 0; }
+.lc-title-row { display: flex; align-items: center; gap: 10px; }
+.lc-title { font-size: 17px; font-weight: 700; color: var(--text); }
+.lc-state { font-size: 12px; padding: 2px 10px; border-radius: 6px; background: #f1f5f9; color: var(--text-muted); }
+.lc-state.busy { background: #dcfce7; color: #15803d; }
+.lc-tools { display: flex; gap: 8px; }
+.lc-main { flex: 1; display: flex; gap: 12px; min-height: 0; }
+.lc-left { width: 56%; background: #fff; border: 1px solid var(--border); border-radius: 10px;
+  display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
+.lc-call-card { display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 12px 16px; border-bottom: 1px solid var(--border); }
+.lc-cc-left { display: flex; align-items: center; gap: 10px; }
+.lc-cc-avatar { width: 38px; height: 38px; border-radius: 50%; background: var(--primary-light); color: var(--primary);
+  display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 600; flex-shrink: 0; }
+.lc-cc-info { display: flex; flex-direction: column; gap: 2px; }
+.lc-cc-name { font-size: 14px; font-weight: 600; color: var(--text); }
+.lc-cc-vip { font-size: 10px; color: var(--primary); border: 1px solid var(--primary-light); background: var(--primary-light);
+  border-radius: 4px; padding: 1px 6px; margin-left: 6px; }
+.lc-cc-meta { font-size: 12px; color: var(--text-muted); }
+.lc-cc-right { display: flex; align-items: center; gap: 12px; }
+.lc-cc-status { font-size: 12px; color: #15803d; display: flex; align-items: center; gap: 5px; }
+.lc-cc-status .dot { width: 8px; height: 8px; border-radius: 50%; background: #16a34a; animation: lcPulse 1.2s infinite; }
+.lc-cc-status.idle .dot { background: #94a3b8; animation: none; }
+@keyframes lcPulse { 0%,100% { opacity: 1; } 50% { opacity: .35; } }
+.lc-hangup-btn { border: 1px solid #fee2e2; background: #fff; color: var(--hangup); border-radius: 6px; padding: 5px 12px; font-size: 12px; cursor: pointer; }
+.lc-hangup-btn:hover { background: #fee2e2; }
+.lc-chat-title { padding: 10px 16px 4px; font-size: 12px; font-weight: 600; color: var(--text-secondary); }
+.lc-chat-sub { color: var(--text-muted); font-weight: 400; }
+.lc-chat { flex: 1; overflow-y: auto; padding: 8px 16px 12px; display: flex; flex-direction: column; gap: 8px; }
+.lc-msg { max-width: 82%; padding: 9px 12px; border-radius: 10px; font-size: 13px; line-height: 1.6; word-break: break-word; }
+.lc-msg.ai { align-self: flex-start; background: #f1f5f9; color: var(--text); border-bottom-left-radius: 2px; }
+.lc-msg.guest { align-self: flex-end; background: var(--primary-light); color: var(--text); border-bottom-right-radius: 2px; }
+.lc-msg .lc-msg-who { font-size: 11px; color: var(--text-muted); margin-bottom: 3px; }
+.lc-msg.guest .lc-msg-who { color: var(--primary); }
+.lc-empty { color: var(--text-muted); font-size: 12px; text-align: center; padding: 24px 0; }
+.lc-input-row { display: flex; gap: 8px; padding: 10px 16px; border-top: 1px solid var(--border); }
+.lc-input-row input { flex: 1; border: 1px solid var(--border); border-radius: 6px; padding: 8px 12px; font-size: 13px; outline: none; }
+.lc-input-row input:focus { border-color: var(--primary); }
+.lc-right { flex: 1; display: flex; flex-direction: column; gap: 10px; overflow-y: auto; padding-right: 2px; min-width: 0; }
+.lc-panel { background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; }
+.lc-panel-title { font-size: 13px; font-weight: 600; color: var(--text); display: flex; align-items: center; margin-bottom: 10px; }
+.lc-panel-title::before { content: ''; width: 3px; height: 12px; background: var(--primary); border-radius: 2px; margin-right: 8px; }
+.lc-kv { display: flex; justify-content: space-between; gap: 10px; padding: 5px 0; font-size: 12px; border-bottom: 1px dashed #f1f5f9; }
+.lc-kv:last-child { border-bottom: none; }
+.lc-kv span { color: var(--text-muted); }
+.lc-kv b { color: var(--text); font-weight: 500; }
+.lc-svc { display: flex; flex-direction: column; gap: 8px; }
+.lc-svc-row { display: flex; align-items: center; gap: 8px; font-size: 12px; }
+.lc-svc-tag { padding: 1px 8px; border-radius: 4px; font-size: 11px; white-space: nowrap; }
+.lc-svc-desc { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text); }
+.lc-svc-st { white-space: nowrap; }
+.lc-svc-time { color: var(--text-muted); white-space: nowrap; }
+
+/* 来电通话弹窗（深色通话风格） */
+.lc-call-overlay { position: fixed; inset: 0; z-index: 1500; background: rgba(2, 6, 23, .55); display: flex; align-items: center; justify-content: center; }
+.lc-call-modal { width: 560px; max-width: 92vw; background: linear-gradient(160deg, #0f172a, #1e293b); border-radius: 14px;
+  overflow: hidden; color: #e2e8f0; box-shadow: 0 20px 60px rgba(0,0,0,.5); display: flex; flex-direction: column; }
+.lc-call-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 20px; border-bottom: 1px solid rgba(148,163,184,.18); }
+.lc-call-user { display: flex; align-items: center; gap: 12px; }
+.lc-call-info { display: flex; flex-direction: column; gap: 3px; }
+.lc-call-name { font-size: 15px; font-weight: 600; color: #f8fafc; }
+.lc-call-vip { font-size: 10px; color: #93c5fd; border: 1px solid rgba(147,197,253,.4); border-radius: 4px; padding: 1px 6px; margin-left: 6px; }
+.lc-call-meta { font-size: 12px; color: #94a3b8; }
+.lc-call-actions { display: flex; align-items: center; gap: 14px; }
+.lc-call-rec { font-size: 12px; color: #93c5fd; cursor: pointer; }
+.lc-call-rec:hover { text-decoration: underline; }
+.lc-call-hangup { border: none; background: #dc2626; color: #fff; padding: 7px 16px; border-radius: 8px; font-size: 13px; cursor: pointer; }
+.lc-call-hangup:hover { background: #b91c1c; }
+.lc-call-body { padding: 16px 20px; display: flex; flex-direction: column; gap: 12px; min-height: 300px; max-height: 44vh; overflow-y: auto; }
+.lc-call-banner { font-size: 12px; color: #fbbf24; background: rgba(251,191,36,.08); border: 1px solid rgba(251,191,36,.25);
+  border-radius: 8px; padding: 8px 12px; }
+.lc-call-chat { display: flex; flex-direction: column; gap: 10px; }
+.lc-call-msg { max-width: 84%; padding: 9px 13px; border-radius: 10px; font-size: 13px; line-height: 1.6; word-break: break-word; animation: lcFadeIn .25s ease; }
+.lc-call-msg.ai { align-self: flex-start; background: rgba(148,163,184,.16); color: #e2e8f0; border-bottom-left-radius: 2px; }
+.lc-call-msg.guest { align-self: flex-end; background: #2563eb; color: #fff; border-bottom-right-radius: 2px; }
+.lc-call-msg .lc-call-who { font-size: 11px; color: #94a3b8; margin-bottom: 3px; }
+.lc-call-msg.guest .lc-call-who { color: #bfdbfe; }
+.lc-call-msg.ai .lc-call-who { color: #94a3b8; }
+@keyframes lcFadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+.lc-call-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 20px; border-top: 1px solid rgba(148,163,184,.18); }
+.lc-call-tip { font-size: 12px; color: #94a3b8; }
+.lc-call-end { border: none; background: #16a34a; color: #fff; padding: 8px 18px; border-radius: 8px; font-size: 13px; cursor: pointer; }
+.lc-call-end:hover { background: #15803d; }
+
+/* AI识别工单创建弹窗 */
+.lc-order-modal { width: 680px; }
+.lc-order-ai { font-size: 11px; color: #15803d; background: #dcfce7; border-radius: 4px; padding: 2px 8px; margin-left: 6px; vertical-align: 2px; }
+.lc-task-row { border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; margin-bottom: 10px; background: #fbfdff; }
+.lc-task-head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
+.lc-task-no { width: 22px; height: 22px; border-radius: 50%; background: var(--primary); color: #fff; font-size: 12px;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.lc-task-head select { padding: 6px 8px; border: 1px solid var(--border); border-radius: 6px; font-size: 12px; background: #fff; color: var(--text-secondary); outline: none; }
+.lc-task-head select:focus { border-color: var(--primary); }
+.lc-task-del { margin-left: auto; border: none; background: none; color: var(--text-muted); cursor: pointer; font-size: 12px; }
+.lc-task-del:hover { color: var(--hangup); }
+.lc-task-body textarea { width: 100%; box-sizing: border-box; border: 1px solid var(--border); border-radius: 6px;
+  padding: 8px 11px; font-size: 12px; outline: none; font-family: inherit; color: var(--text); min-height: 64px; resize: vertical; }
+.lc-task-body textarea:focus { border-color: var(--primary); }
+.lc-items-head { font-size: 11px; color: var(--text-muted); margin-bottom: 6px; }
+.lc-item-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.lc-item-row input { padding: 6px 9px; border: 1px solid var(--border); border-radius: 6px; font-size: 12px; outline: none; }
+.lc-item-row input:focus { border-color: var(--primary); }
+.lc-item-name { flex: 1; }
+.lc-item-qty { width: 76px; }
+.lc-item-del { border: none; background: none; color: var(--text-muted); cursor: pointer; font-size: 13px; padding: 2px 6px; }
+.lc-item-del:hover { color: var(--hangup); }
+.lc-add-item { border: 1px dashed var(--primary); background: var(--primary-light); color: var(--primary); border-radius: 6px;
+  font-size: 12px; padding: 5px 12px; cursor: pointer; }
+.lc-add-item:hover { background: #d6e6fd; }
+.lc-ai-tag { display: inline-block; font-size: 10px; color: #15803d; background: #dcfce7; border-radius: 3px; padding: 1px 6px; margin-left: 6px; }
+
+/* AI 识别工单窗口：右侧贴靠抽屉 */
+.lc-order-overlay { position: fixed; inset: 0; z-index: 1600; background: rgba(15, 23, 42, .35); }
+.lc-order-drawer { position: absolute; top: 0; right: 0; bottom: 0; width: 640px; max-width: 94vw;
+  background: #fff; display: flex; flex-direction: column; box-shadow: -12px 0 40px rgba(0,0,0,.18); animation: lcDrawerIn .28s ease; }
+@keyframes lcDrawerIn { from { transform: translateX(60px); opacity: .6; } to { transform: translateX(0); opacity: 1; } }
+.lc-order-head { display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  padding: 14px 18px; border-bottom: 1px solid var(--border); }
+.lc-order-title { font-size: 15px; font-weight: 700; color: var(--text); }
+.lc-order-head-ops { display: flex; align-items: center; gap: 10px; }
+.lc-order-body { flex: 1; overflow-y: auto; padding: 14px 18px; }
+.lc-order-foot { display: flex; justify-content: flex-end; gap: 10px; padding: 12px 18px; border-top: 1px solid var(--border); }
+
+/* 通话详情（工单抽屉左侧展开面板） */
+.lc-call-detail { position: absolute; top: 0; bottom: 0; left: 0; width: 560px; max-width: 46vw;
+  background: #fff; display: flex; flex-direction: column; box-shadow: 12px 0 40px rgba(0,0,0,.18);
+  transform: translateX(-100%); transition: transform .28s ease; z-index: 1; }
+.lc-call-detail.open { transform: translateX(0); }
+.lc-call-detail-head { display: flex; align-items: center; justify-content: space-between;
+  padding: 13px 18px; border-bottom: 1px solid var(--border); font-size: 14px; font-weight: 700; color: var(--text); }
+.lc-call-detail-body { flex: 1; overflow-y: auto; padding: 14px 18px; }
 </style>
 </head>
 
@@ -1735,6 +1871,83 @@ body {
         <div class="lf-modal-body" id="crDetailBody"></div>
         <div class="lf-modal-foot">
           <button class="lf-foot-cancel" onclick="crCloseDetail()">关闭</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== 人工通话：来电通话弹窗（深色通话风格） ===== -->
+    <div id="lcCallOverlay" class="lc-call-overlay" style="display:none;">
+      <div class="lc-call-modal">
+        <div class="lc-call-head">
+          <div class="lc-call-user">
+            <div class="lc-cc-avatar" style="background:#334155;">张</div>
+            <div class="lc-call-info">
+              <div class="lc-call-name">张先生 <span class="lc-call-vip">普通会员</span></div>
+              <div class="lc-call-meta">大床房 7406 · 外线来电</div>
+            </div>
+          </div>
+          <div class="lc-call-actions">
+            <button class="lc-call-hangup" onclick="lcHangup()">挂断</button>
+          </div>
+        </div>
+        <div class="lc-call-body">
+          <div class="lc-call-banner">正在实时通话，系统将自动识别通话内容并生成服务工单</div>
+          <div class="lc-call-chat" id="lcCallChat"></div>
+        </div>
+        <div class="lc-call-foot">
+          <span class="lc-call-tip" id="lcCallTip">通话中 · 识别内容：尽快打扫 7406、矿泉水2瓶、拖鞋1双</span>
+          <button class="lc-call-end" id="lcCallEndBtn" onclick="lcEndCall()" style="display:none;">生成工单（10s）</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== 人工通话：AI 识别工单窗口（右侧贴靠抽屉 + 左侧通话详情展开） ===== -->
+    <div id="lcOrderOverlay" class="lc-order-overlay" style="display:none;">
+      <div class="lc-call-detail" id="lcCallDetailPanel">
+        <div class="lc-call-detail-head">
+          <span>通话详情</span>
+          <button class="lf-modal-close" onclick="lcCloseCallDetail()">&#10005;</button>
+        </div>
+        <div class="lc-call-detail-body" id="lcCallDetailBody"></div>
+      </div>
+      <div class="lc-order-drawer">
+        <div class="lc-order-head">
+          <div class="lc-order-title">
+            <span>创建服务工单 <span class="lc-order-ai">AI 已自动识别通话内容</span></span>
+          </div>
+          <div class="lc-order-head-ops">
+            <button class="cr-btn" onclick="lcOpenCallDetail()">查看通话详情</button>
+            <span class="lf-modal-close" onclick="lcCancelOrder()">&#10005;</span>
+          </div>
+        </div>
+        <div class="lc-order-body">
+          <div class="lf-form-row tk-add-row">
+            <label>处理时间</label>
+            <input type="text" id="lcOrderTime" readonly>
+          </div>
+          <div class="lf-form-row tk-add-row">
+            <label><span class="req">*</span>房间号</label>
+            <input type="text" id="lcOrderRoom" placeholder="请输入房间号">
+          </div>
+          <div class="lf-form-row tk-add-row" style="align-items:flex-start;">
+            <label><span class="req">*</span>任务内容</label>
+            <div style="flex:1;display:flex;flex-direction:column;gap:8px;">
+              <div id="lcTaskRows"></div>
+              <button class="cr-btn" style="align-self:flex-start;" onclick="lcAddRow()">＋ 添加任务类型</button>
+            </div>
+          </div>
+          <div class="lf-form-row tk-add-row">
+            <label><span class="req">*</span>任务负责人</label>
+            <select id="lcOrderAssignee"></select>
+          </div>
+          <div class="lf-form-row tk-add-row">
+            <label><span class="req">*</span>任务优先级</label>
+            <select id="lcOrderPriority"></select>
+          </div>
+        </div>
+        <div class="lc-order-foot">
+          <button class="lf-foot-cancel" onclick="lcCancelOrder()">取消</button>
+          <button class="lf-foot-ok" onclick="lcSaveOrder()">保存</button>
         </div>
       </div>
     </div>
@@ -2417,6 +2630,7 @@ function init() {
   tkInit();
   kbInit();
   crInit();
+  lcInit();
   updateAgentStatus();
   updateTopbar();
   updateStatusBar();
@@ -2534,10 +2748,12 @@ function renderAgentZone() {
   const el = document.getElementById('agentZone');
   if (!el) return;
   if (!state.signedIn) {
-    el.innerHTML = '<span style="font-size:12px;color:var(--text-muted);white-space:nowrap;">未签入，无法接听来电</span>' +
+    el.innerHTML = '<button class="signin-btn" onclick="lcStartCall()" title="模拟外线来电通话">模拟通话</button>' +
+      '<span style="font-size:12px;color:var(--text-muted);white-space:nowrap;">未签入，无法接听来电</span>' +
       '<button class="signin-btn" onclick="openSignIn()">IP签入</button>';
   } else {
-    el.innerHTML = '<div class="agent-card">' +
+    el.innerHTML = '<button class="signin-btn" onclick="lcStartCall()" title="模拟外线来电通话">模拟通话</button>' +
+      '<div class="agent-card">' +
         '<span class="agent-id">工号 0001</span><span>分机 8333333</span><span>|</span><span>房务中心</span>' +
       '</div>' +
       '<button class="signout-btn" onclick="openSignOut()">签出</button>';
@@ -4924,8 +5140,8 @@ function tkRenderDetail() {
     '<div class="tk-detail-card">' +
       '<div class="tk-detail-head"><span class="tk-pri ' + t.priority + '">' + TK_PRIORITY[t.priority] + '</span><span class="tk-badge ' + t.status + '">' + TK_STATUS[t.status] + '</span></div>' +
       '<div class="tk-detail-title" style="font-weight:600;">任务信息</div>' +
-      row('任务源', '房务中心') +
-      row('创建类型', '人工') +
+      row('任务源', lfEsc(t.source || '房务中心')) +
+      row('创建类型', lfEsc(t.createType || '人工')) +
       row('创建时间', lfEsc(t.createTime)) +
       row('开始时间', lfEsc(t.startTime) || '—') +
       row('到期时间', lfEsc(t.dueTime) || '—') +
@@ -5668,7 +5884,12 @@ function crOpenDetail(id) {
   const c = crState.list.find(x => x.id === id);
   if (!c) return;
   if (crPlayTimer) { clearInterval(crPlayTimer); crPlayTimer = null; }
-  const body = document.getElementById('crDetailBody');
+  document.getElementById('crDetailBody').innerHTML = crDetailHtml(c);
+  document.getElementById('crDetailOverlay').style.display = 'flex';
+}
+
+// 通话详情内容渲染（可复用：通话记录详情弹窗 / 人工通话工单抽屉"查看通话详情"）
+function crDetailHtml(c) {
   const dir = c.caller.length > 6 ? '呼入' : '呼出';
   const line = c.biz === '内部呼叫' ? '内线' : '外线';
   const guest = c.room ? '住店客人' : '外线客人';
@@ -5677,11 +5898,11 @@ function crOpenDetail(id) {
   const isAi = c.answer === '机器人接听' ? '是' : '否';
   const isHuman = c.answer === '机器人接听' ? '否' : '是';
   const summaryLine = guest + '·' + line + '·' + (c.room ? ('房间' + c.room) : '未绑定房间') + '·' + c.answer + '(' + c.duration + ')';
-  const no = 'CALL-' + c.date.replace(/-/g, '') + String(id).padStart(2, '0');
+  const no = 'CALL-' + c.date.replace(/-/g, '') + String(c.id).padStart(2, '0');
   const totalSec = crDurationSec(c.duration);
   const aiNo = '059188887777';
   const item = (k, v, hl) => '<div class="cd-item"><span class="k">' + k + '</span><span class="v' + (hl ? ' hl' : '') + '">' + v + '</span></div>';
-  body.innerHTML =
+  return (
     '<div class="cd-head">' +
       '<div class="cd-title">通话记录详情 <span class="cd-no">#' + no + '</span></div>' +
       '<div class="cd-head-right">' + crEmotionTag(c.emotion) + '<span class="cd-time">' + c.date + ' ' + c.time + '</span></div>' +
@@ -5729,8 +5950,8 @@ function crOpenDetail(id) {
         '<span class="cd-player-time" id="crPlayTime" data-total="' + totalSec + '">00:00 / ' + crFmtSec(totalSec) + '</span>' +
         '<button class="cd-rate" data-rate="1" onclick="crCycleRate(this)">1.0x</button>' +
       '</div>' +
-    '</div>';
-  document.getElementById('crDetailOverlay').style.display = 'flex';
+    '</div>'
+  );
 }
 
 // 录音播放器（原型演示）
@@ -5798,6 +6019,305 @@ function crExport() {
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
   showToast('已导出 ' + data.length + ' 条通话记录');
+}
+
+// ============================================================
+// 人工通话（模拟来电 → AI 识别 → 任务工单，lc = live call）
+// ============================================================
+const LC_DIALOG = [
+  { who: 'ai', text: '您好，这里是中远宾馆前台小助手，请问有什么可以帮助您？' },
+  { who: 'guest', text: '房间需要尽快打扫一下，另外麻烦送两瓶矿泉水和一双拖鞋到房间。' },
+  { who: 'ai', text: '好的，为您确认一下：需要尽快清扫 7406 房间，并配送矿泉水 2 瓶、拖鞋 1 双，对吗？' },
+  { who: 'guest', text: '对的，谢谢。' },
+  { who: 'ai', text: '好的，已记录。正在为您生成服务工单，请稍候，再见。' }
+];
+// AI 识别的工单内容（由通话内容自动生成）
+const LC_AI_FILL = {
+  room: '7406',
+  tasks: [
+    { type: '清扫服务', sub: '赶房', content: '客人要求尽快打扫房间（AI 识别）', items: [] },
+    { type: '送物服务', sub: '客房送物', content: '', items: [{ name: '矿泉水', qty: 2 }, { name: '拖鞋', qty: 1 }] }
+  ]
+};
+const LC_TASK_TYPES = ['清扫服务', '维修服务', '送物服务', '车牌登记', '遗留查找', '其他服务'];
+// 本次通话详情示例（工单抽屉"查看通话详情"复用 crDetailHtml 渲染）
+const LC_CALL_MOCK = {
+  id: 99, date: '', time: '', category: '客需类', summary: '客房服务', emotion: 'normal',
+  room: '7406', order: '有客需单', caller: '130****1234', callee: '8188', status: '被叫挂机',
+  answer: '人工接听', duration: '2分钟10秒', biz: '外线客服托管',
+  detail: '客人要求尽快打扫房间，并配送矿泉水 2 瓶、拖鞋 1 双至房间。'
+};
+// 房间 → 排班人员映射（任务负责人默认取当前房间排班人员）
+const LC_SHIFT_MAP = {
+  '7406': '张亮亮（测试）', '0505': '张亮亮（测试）', '0501': '张亮亮（测试）',
+  '0830': '张亮亮（测试）', '0315': '张亮亮（测试）',
+  '0405': '林雄才', '0111': '林雄才', '8602': '林雄才', '0509': '林雄才',
+  '8206': '王师傅', '0722': '王师傅',
+  '8508': '李娟', '1008': '李娟'
+};
+
+let lcAutoTimer = null;
+let lcDialogTimer = null;
+let lcDialogIdx = 0;
+let lcCountTimer = null;
+let lcCountLeft = 10;
+let lcAutoDone = false;
+let lcState = { busy: false, rows: [] };
+
+function lcInit() {
+  lcFillOrderSelects();
+  // 进入话务台界面 3 秒后自动弹出通话界面（仅首次自动弹出，避免反复打扰）
+  lcAutoTimer = setTimeout(function () {
+    lcAutoDone = true;
+    if (!lcState.busy && document.getElementById('page-console').classList.contains('active')) lcStartCall();
+  }, 3000);
+}
+
+// 当前房间的排班人员
+function lcShiftOf(room) {
+  room = (room || '').toString().trim();
+  return LC_SHIFT_MAP[room] || TK_ASSIGNEES[0];
+}
+
+function lcFillOrderSelects() {
+  const as = document.getElementById('lcOrderAssignee');
+  as.innerHTML = '<option value="all">请选择任务负责人</option>' +
+    TK_ASSIGNEES.map(a => '<option value="' + a + '">' + a + '</option>').join('');
+  const pr = document.getElementById('lcOrderPriority');
+  pr.innerHTML = ['低优先级', '中优先级', '高优先级'].map(p =>
+    '<option value="' + p + '"' + (p === '高优先级' ? ' selected' : '') + '>' + p + '</option>').join('');
+}
+
+// ===== 模拟来电：弹出通话界面（含演示对话） =====
+function lcStartCall() {
+  if (lcState.busy) { showToast('当前已有通话进行中'); return; }
+  lcAutoDone = true;
+  clearTimeout(lcAutoTimer);
+  lcState.busy = true;
+  document.getElementById('lcCallChat').innerHTML = '';
+  document.getElementById('lcCallEndBtn').style.display = 'none';
+  const tip = document.getElementById('lcCallTip');
+  tip.style.display = '';
+  tip.textContent = '通话中 · 识别内容：尽快打扫 7406、矿泉水2瓶、拖鞋1双';
+  document.getElementById('lcCallOverlay').style.display = 'flex';
+  lcDialogIdx = 0;
+  clearInterval(lcDialogTimer);
+  lcDialogTimer = setInterval(lcPlayDialogStep, 950);
+  lcPlayDialogStep();
+  showToast('模拟外线来电：已进入实时通话');
+}
+
+function lcPlayDialogStep() {
+  if (lcDialogIdx >= LC_DIALOG.length) {
+    clearInterval(lcDialogTimer);
+    lcDialogTimer = null;
+    // 对话结束即通话结束 → 启动 10 秒倒计时
+    lcBeginCountdown();
+    return;
+  }
+  const d = LC_DIALOG[lcDialogIdx++];
+  const chat = document.getElementById('lcCallChat');
+  const div = document.createElement('div');
+  div.className = 'lc-call-msg ' + d.who;
+  div.innerHTML = '<div class="lc-call-who">' + (d.who === 'ai' ? '前台小助手' : '住客 张先生') + '</div>' + lfEsc(d.text);
+  chat.appendChild(div);
+  chat.scrollTop = chat.scrollHeight;
+}
+
+// 通话结束（对话播完 / 手动挂断）→ 下方工单按钮 10 秒倒计时，到时自动关闭通话弹窗并展示工单窗口
+function lcBeginCountdown() {
+  lcState.busy = false;
+  lcCountLeft = 10;
+  clearInterval(lcCountTimer);
+  const tip = document.getElementById('lcCallTip');
+  const btn = document.getElementById('lcCallEndBtn');
+  const tick = function () {
+    if (lcCountLeft <= 0) {
+      clearInterval(lcCountTimer);
+      lcCountTimer = null;
+      lcEndCall();
+      return;
+    }
+    tip.textContent = '通话已结束 · ' + lcCountLeft + ' 秒后自动生成工单';
+    btn.textContent = '生成工单（' + lcCountLeft + 's）';
+  };
+  tick();
+  lcCountTimer = setInterval(function () {
+    lcCountLeft--;
+    tick();
+  }, 1000);
+}
+
+// 手动挂断（通话中）→ 通话结束，进入倒计时
+function lcHangup() {
+  clearInterval(lcDialogTimer);
+  lcDialogTimer = null;
+  if (!lcState.busy) return;
+  lcBeginCountdown();
+  showToast('通话已挂断，10 秒后自动生成工单');
+}
+
+// 结束通话：关闭通话弹窗 → 展示任务工单窗口（右侧抽屉）
+function lcEndCall() {
+  clearInterval(lcDialogTimer);
+  lcDialogTimer = null;
+  clearInterval(lcCountTimer);
+  lcCountTimer = null;
+  lcState.busy = false;
+  document.getElementById('lcCallOverlay').style.display = 'none';
+  lcOpenOrder();
+}
+
+// ===== AI 识别工单窗口（右侧贴靠抽屉） =====
+function lcOpenOrder() {
+  document.getElementById('lcOrderTime').value = lfNow() + ':00';
+  document.getElementById('lcOrderRoom').value = LC_AI_FILL.room;
+  lcState.rows = LC_AI_FILL.tasks.map(t => ({ type: t.type, sub: t.sub, content: t.content, items: t.items.map(i => ({ name: i.name, qty: i.qty })) }));
+  lcRenderRows();
+  // 任务负责人默认选中当前房间的排班人员，任务优先级默认高
+  document.getElementById('lcOrderAssignee').value = lcShiftOf(LC_AI_FILL.room);
+  document.getElementById('lcOrderPriority').value = '高优先级';
+  lcCloseCallDetail();
+  document.getElementById('lcOrderOverlay').style.display = 'flex';
+  showToast('已根据通话内容自动识别并生成工单');
+}
+
+function lcCancelOrder() {
+  document.getElementById('lcOrderOverlay').style.display = 'none';
+}
+
+function lcRenderRows() {
+  const box = document.getElementById('lcTaskRows');
+  box.innerHTML = lcState.rows.map((r, idx) => {
+    const isSend = r.type === '送物服务';
+    let bodyHtml = '';
+    if (isSend) {
+      const itemsHtml = r.items.map((it, ii) =>
+        '<div class="lc-item-row">' +
+        '<input class="lc-item-name" value="' + lfEsc(it.name) + '" placeholder="物品名称" oninput="lcSetItem(' + idx + ',' + ii + ',this.value,\'name\')">' +
+        '<input class="lc-item-qty" type="number" min="1" value="' + it.qty + '" oninput="lcSetItem(' + idx + ',' + ii + ',this.value,\'qty\')">' +
+        '<button class="lc-item-del" onclick="lcDelItem(' + idx + ',' + ii + ')">删除</button></div>').join('');
+      bodyHtml = '<div class="lc-items-head">物品名称与数量（可手工添加）</div>' + itemsHtml +
+        '<button class="lc-add-item" onclick="lcAddItem(' + idx + ')">＋ 添加物品</button>';
+    } else {
+      bodyHtml = '<textarea placeholder="请输入任务内容（AI 已自动识别填写）" oninput="lcSetContent(' + idx + ',this.value)">' + lfEsc(r.content) + '</textarea>';
+    }
+    return '<div class="lc-task-row">' +
+      '<div class="lc-task-head">' +
+        '<span class="lc-task-no">' + (idx + 1) + '</span>' +
+        '<select onchange="lcSetType(' + idx + ',this.value)">' +
+          LC_TASK_TYPES.map(t => '<option value="' + t + '"' + (t === r.type ? ' selected' : '') + '>' + t + '</option>').join('') +
+        '</select>' +
+        '<select onchange="lcSetSub(' + idx + ',this.value)">' +
+          (TK_SUBTYPES[r.type] || ['其他']).map(s => '<option value="' + s + '"' + (s === r.sub ? ' selected' : '') + '>' + s + '</option>').join('') +
+        '</select>' +
+        (r.type === '清扫服务' ? '<span class="lc-ai-tag">AI识别</span>' : '') +
+        '<button class="lc-task-del" onclick="lcDelRow(' + idx + ')">删除任务</button>' +
+      '</div>' +
+      '<div class="lc-task-body">' + bodyHtml + '</div>' +
+    '</div>';
+  }).join('');
+}
+
+function lcSetType(idx, type) {
+  lcState.rows[idx].type = type;
+  lcState.rows[idx].sub = (TK_SUBTYPES[type] || ['其他'])[0];
+  if (type !== '送物服务') lcState.rows[idx].items = [];
+  if (type === '送物服务' && !lcState.rows[idx].items.length) lcState.rows[idx].items = [{ name: '', qty: 1 }];
+  lcRenderRows();
+}
+
+function lcSetSub(idx, sub) {
+  lcState.rows[idx].sub = sub;
+}
+
+function lcSetContent(idx, text) {
+  lcState.rows[idx].content = text;
+}
+
+function lcSetItem(idx, ii, val, field) {
+  if (field === 'qty') lcState.rows[idx].items[ii].qty = parseInt(val, 10) || 1;
+  else lcState.rows[idx].items[ii].name = val;
+}
+
+function lcAddItem(idx) {
+  lcState.rows[idx].items.push({ name: '', qty: 1 });
+  lcRenderRows();
+}
+
+function lcDelItem(idx, ii) {
+  lcState.rows[idx].items.splice(ii, 1);
+  lcRenderRows();
+}
+
+function lcAddRow() {
+  lcState.rows.push({ type: '清扫服务', sub: '日常清扫', content: '', items: [] });
+  lcRenderRows();
+}
+
+function lcDelRow(idx) {
+  if (lcState.rows.length <= 1) { showToast('至少保留一个任务'); return; }
+  lcState.rows.splice(idx, 1);
+  lcRenderRows();
+}
+
+// ===== 查看通话详情（工单抽屉左侧展开，复用 crDetailHtml 渲染） =====
+function lcOpenCallDetail() {
+  const mock = Object.assign({}, LC_CALL_MOCK);
+  const now = lfNow();
+  mock.date = now.slice(0, 10);
+  mock.time = now.slice(11, 16);
+  document.getElementById('lcCallDetailBody').innerHTML = crDetailHtml(mock);
+  document.getElementById('lcCallDetailPanel').classList.add('open');
+}
+
+function lcCloseCallDetail() {
+  document.getElementById('lcCallDetailPanel').classList.remove('open');
+}
+
+// ===== 保存：生成任务工单并写入任务中心 =====
+function lcSaveOrder() {
+  const room = document.getElementById('lcOrderRoom').value.trim();
+  if (!room) { showToast('请填写房间号'); return; }
+  if (!lcState.rows.length) { showToast('请至少添加一个任务'); return; }
+  const assignee = document.getElementById('lcOrderAssignee').value;
+  if (assignee === 'all') { showToast('请选择任务负责人'); return; }
+  const priText = document.getElementById('lcOrderPriority').value;
+  const priority = priText === '高优先级' ? 'high' : (priText === '中优先级' ? 'normal' : 'low');
+  const now = lfNow();
+  let nextId = tkState.list.reduce((m, t) => Math.max(m, t.id), 0) + 1;
+  const created = [];
+  lcState.rows.forEach(r => {
+    let content = '';
+    if (r.type === '送物服务') {
+      const parts = r.items.map(i => i.name ? (i.name + '×' + i.qty) : '').filter(Boolean);
+      content = parts.join('、');
+      if (!content) { showToast('送物任务请至少填写一件物品'); return; }
+    } else {
+      content = r.content.trim();
+      if (!content) { showToast('请填写「' + r.type + '」任务内容'); return; }
+    }
+    const group = r.type === '维修服务' ? '工程组' : (r.type === '车牌登记' ? '前厅组' : '客房组');
+    tkState.list.unshift({
+      id: nextId++, type: r.type, sub: r.sub, tag: content, room: room, floor: '',
+      assignee: assignee, group: group, createTime: now, startTime: '', dueTime: '',
+      status: 'dispatching', priority: priority, source: '通话识别', createType: 'AI识别',
+      record: '通话内容自动识别', detail: '通话识别工单：' + content, history: [[now, 'AI 识别通话内容自动创建任务，等待派单']]
+    });
+    created.push(r.type + '（' + content + '）');
+  });
+  if (!created.length) return;
+  document.getElementById('lcOrderOverlay').style.display = 'none';
+  // 切到任务中心并展示新任务
+  tkState.selectedId = tkState.list[0].id;
+  tkState.filter = { type: 'all', status: 'all', priority: 'all', floor: 'all', room: '', assignee: 'all', group: 'all', statKey: 'all', start: '', end: '' };
+  document.getElementById('tkDateStart').value = '';
+  document.getElementById('tkDateEnd').value = '';
+  tkFillSelects();
+  tkRenderStats();
+  tkRenderList();
+  switchMenu('task');
+  showToast('已生成 ' + created.length + ' 条任务工单并写入任务中心');
 }
 
 // ===== Toast =====
