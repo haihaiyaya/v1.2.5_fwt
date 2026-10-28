@@ -364,6 +364,10 @@ table.atable{width:100%;table-layout:fixed;border-collapse:collapse;min-width:76
 .thumb-empty svg{width:24px;height:24px}
 .link-btn.disabled{color:#B7C2D4;cursor:not-allowed}
 .link-btn.disabled:hover{text-decoration:none;color:#B7C2D4}
+.link-btn.danger{color:#E5493A}
+.link-btn.danger:hover{color:#C23A2E}
+.toolbar-gap{flex:1}
+.alarm-toolbar .sel{width:130px}
 .img-upload{display:flex;align-items:flex-start;gap:12px}
 .upload-box{
   width:96px;height:96px;border:1px dashed #C9D0DB;border-radius:8px;
@@ -466,7 +470,44 @@ table.atable{width:100%;table-layout:fixed;border-collapse:collapse;min-width:76
 @media (prefers-reduced-motion: reduce){
   *{transition:none!important;animation:none!important}
 }
+/* ===== 主动呼叫统计分析 ===== */
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:14px}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px 18px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.stat-label{font-size:13px;color:var(--text-2)}
+.stat-num{font-size:28px;font-weight:700;color:var(--text-1);line-height:1.1;font-family:ui-sans-serif,-apple-system,Segoe UI,Microsoft YaHei,sans-serif}
+.stat-num.bad{color:#E5493A}
+.stat-sub{font-size:12px;color:var(--text-3);display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.stat-sub b{font-weight:600;color:var(--text-2)}
+.stat-sub .ok{color:#18A058}
+.stat-sub .bad{color:#E5493A}
+.filter-bar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:14px}
+.tab-pill{padding:6px 14px;border-radius:8px;font-size:13px;color:var(--text-2);background:var(--bg);border:1px solid var(--border);cursor:pointer;transition:.15s}
+.tab-pill:hover{color:var(--primary);border-color:var(--primary)}
+.tab-pill.on{background:var(--primary);border-color:var(--primary);color:#fff}
+.filter-bar .dt-ipt{width:160px}
+.filter-bar .ft-sep{color:var(--text-3)}
+.chart-grid{display:grid;grid-template-columns:1.12fr .88fr;gap:12px;margin-bottom:14px}
+.chart-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 16px;min-width:0}
+.chart-title{font-size:14px;font-weight:600;color:var(--text-1);margin-bottom:6px}
+.chart-title .sub{font-size:12px;font-weight:400;color:var(--text-3);margin-left:8px}
+.chart-box{width:100%;height:320px}
+.chart-empty{width:100%;height:320px;display:flex;align-items:center;justify-content:center;color:var(--text-3);font-size:13px}
+.sec-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
+.sec-title{font-size:16px;font-weight:600;color:var(--text-1)}
+.sec-title .sub{font-size:12px;font-weight:400;color:var(--text-3);margin-left:8px}
+.atable .c-date{width:8%}
+.atable .c-total{width:7%}
+.atable .c-io{width:6%}
+.atable .c-rate{width:8%}
+.atable .c-op{width:11%}
+.drawer-sub{font-size:13px;color:var(--text-2);margin-bottom:12px}
+.atable .tot-row{font-weight:600;background:#F7F9FC}
+.atable .tot-row td{border-top:1px solid var(--border)}
+@media (max-width:900px){.stat-grid{grid-template-columns:repeat(2,1fr)}.chart-grid{grid-template-columns:1fr}}
+@media (max-width:560px){.stat-num{font-size:22px}.filter-bar .dt-ipt{width:100%}.filter-bar .ft-sep{display:none}}
 </style>
+<script src="https://fastly.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<script>window.echarts || document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.5.0/echarts.min.js"><\/script>');</script>
 </head>
 <body>
 <div class="layout">
@@ -596,6 +637,123 @@ table.atable{width:100%;table-layout:fixed;border-collapse:collapse;min-width:76
           <div class="pager">
             <span>共 <b id="borrowTotal">0</b> 条</span>
             <span>20条/页</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== 视图五：主动呼叫统计分析 ===== -->
+      <section class="view" id="viewCall" aria-label="主动呼叫统计分析">
+        <div class="page-head-row">
+          <h1 class="page-title">主动呼叫统计分析</h1>
+        </div>
+        <div class="filter-bar" role="group" aria-label="统计时段筛选">
+          <button class="tab-pill" data-tab="当日" type="button">当日</button>
+          <button class="tab-pill" data-tab="本周" type="button">本周</button>
+          <button class="tab-pill on" data-tab="当月" type="button">当月</button>
+          <button class="tab-pill" data-tab="近三月" type="button">近三月</button>
+          <button class="tab-pill" data-tab="近半年" type="button">近半年</button>
+          <button class="tab-pill" data-tab="全年" type="button">全年</button>
+          <button class="tab-pill" data-tab="自定义日期" type="button">自定义日期</button>
+          <input class="ipt dt-ipt" id="callFrom" type="text" value="2026-10-01 00:00:00" aria-label="开始时间">
+          <span class="ft-sep">至</span>
+          <input class="ipt dt-ipt" id="callTo" type="text" value="2026-10-31 23:59:59" aria-label="结束时间">
+          <button class="btn btn-secondary" id="callSearchBtn" type="button">搜索</button>
+          <button class="btn-ghost" id="callResetBtn" type="button">重置</button>
+        </div>
+        <div class="stat-grid">
+          <div class="stat-card"><div class="stat-label">外呼总数量</div><div class="stat-num" id="callTotal">0</div><div class="stat-sub">本期主动外呼合计</div></div>
+          <div class="stat-card"><div class="stat-label">接通数</div><div class="stat-num" id="callAns">0</div><div class="stat-sub">接通率 <b class="ok" id="callAnsRate">—</b></div></div>
+          <div class="stat-card"><div class="stat-label">失败数</div><div class="stat-num bad" id="callFail">0</div><div class="stat-sub">未接通率 <b class="bad" id="callFailRate">—</b></div></div>
+          <div class="stat-card"><div class="stat-label">叫醒外呼数</div><div class="stat-num" id="callWake">0</div><div class="stat-sub">接通 <b class="ok" id="callWakeAns">—</b> · 失败 <b class="bad" id="callWakeFail">—</b></div></div>
+          <div class="stat-card"><div class="stat-label">预离外呼数</div><div class="stat-num" id="callPre">0</div><div class="stat-sub">接通 <b class="ok" id="callPreAns">—</b> · 失败 <b class="bad" id="callPreFail">—</b></div></div>
+          <div class="stat-card"><div class="stat-label">叫醒接通率</div><div class="stat-num" id="callWakeRate">0%</div><div class="stat-sub" id="callWakeRateSub">—</div></div>
+          <div class="stat-card"><div class="stat-label">预离接通率</div><div class="stat-num" id="callPreRate">0%</div><div class="stat-sub" id="callPreRateSub">—</div></div>
+          <div class="stat-card"><div class="stat-label">未接通率</div><div class="stat-num bad" id="callFailRateBig">0%</div><div class="stat-sub" id="callFailRateSub">—</div></div>
+        </div>
+        <div class="chart-grid">
+          <div class="chart-card">
+            <div class="chart-title">每日预离 / 叫醒外呼量与未接通率<span class="sub" id="dailySub"></span></div>
+            <div class="chart-box" id="callDailyChart" role="img" aria-label="每日预离叫醒外呼量与未接通率组合图"></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-title">小时呼叫量与接通率趋势<span class="sub" id="hourSub"></span></div>
+            <div class="chart-box" id="callHourlyChart" role="img" aria-label="小时呼叫量与接通率趋势图"></div>
+          </div>
+        </div>
+        <div class="card table-card">
+          <div class="sec-head">
+            <div class="sec-title">按日汇总报表<span class="sub" id="callRangeText"></span></div>
+            <button class="btn btn-secondary" id="callExportBtn" type="button">导出汇总</button>
+          </div>
+          <div class="table-scroll">
+            <table class="atable">
+              <colgroup>
+                <col class="c-date"><col class="c-total"><col class="c-io"><col class="c-io"><col class="c-rate">
+                <col class="c-total"><col class="c-io"><col class="c-io"><col class="c-rate">
+                <col class="c-total"><col class="c-io"><col class="c-io"><col class="c-rate"><col class="c-op">
+              </colgroup>
+              <thead>
+                <tr>
+                  <th>日期</th><th>外呼总数</th><th>接通</th><th>失败</th><th>未接通率</th>
+                  <th>叫醒外呼</th><th>叫醒接通</th><th>叫醒失败</th><th>叫醒接通率</th>
+                  <th>预离外呼</th><th>预离接通</th><th>预离失败</th><th>预离接通率</th><th>操作</th>
+                </tr>
+              </thead>
+              <tbody id="callTbody"></tbody>
+            </table>
+          </div>
+          <div class="pager">
+            <span>共 <b id="callTotal2">0</b> 天</span>
+            <span>20条/页</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== 视图六：酒店物品管理 ===== -->
+      <section class="view" id="viewItems" aria-label="酒店物品管理">
+        <div class="page-head-row">
+          <h1 class="page-title">酒店物品管理</h1>
+          <button class="btn btn-primary" id="itemAddBtn" type="button">新增物品</button>
+        </div>
+        <div class="alarm-toolbar">
+          <select class="sel" id="itemTypeFilter" aria-label="物品类型筛选">
+            <option value="">全部类型</option>
+            <option>客房布草</option>
+            <option>一次性消耗品</option>
+            <option>客房客杂</option>
+            <option>客房电器</option>
+            <option>工程配件</option>
+            <option>其他</option>
+          </select>
+          <input class="ipt sea" id="itemSearch" type="text" placeholder="请输入物品名称">
+          <button class="btn btn-secondary" id="itemSearchBtn" type="button">搜索</button>
+          <button class="btn-ghost" id="itemResetBtn" type="button">重置</button>
+          <span class="toolbar-gap"></span>
+          <button class="btn btn-secondary" id="itemImportBtn" type="button">导入</button>
+          <button class="btn btn-secondary" id="itemExportBtn" type="button">导出</button>
+          <input type="file" id="itemImportFile" accept=".csv,text/csv" style="display:none" aria-label="导入物品清单">
+        </div>
+        <div class="card table-card">
+          <div class="table-scroll">
+            <table class="atable">
+              <colgroup>
+                <col style="width:18%"><col style="width:32%"><col style="width:18%"><col style="width:20%"><col style="width:12%">
+              </colgroup>
+              <thead>
+                <tr>
+                  <th>物品类型</th><th>物品名称</th><th>物品数量</th><th>创建时间</th><th>操作</th>
+                </tr>
+              </thead>
+              <tbody id="itemTbody"></tbody>
+            </table>
+          </div>
+          <div class="pager">
+            <span>共 <b id="itemTotal">0</b> 条</span>
+            <span>20条/页</span>
+            <button class="pg-num" type="button" id="itemPgPrev">上一页</button>
+            <span class="pg-num cur" id="itemPgCur">1</span>
+            <button class="pg-num" type="button" id="itemPgNext">下一页</button>
+            <span class="pg-go">前往 <input class="ipt num" id="itemPgJump" type="number" min="1" value="1"> 页 <button class="btn-go btn-secondary" id="itemPgGo" type="button">确定</button></span>
           </div>
         </div>
       </section>
@@ -782,6 +940,73 @@ table.atable{width:100%;table-layout:fixed;border-collapse:collapse;min-width:76
   </div>
 </div>
 
+<!-- ===== 呼叫明细抽屉 ===== -->
+<div class="drawer-mask" id="callDetailMask"></div>
+<div class="drawer" id="callDetailDrawer" role="dialog" aria-modal="true" aria-labelledby="callDetailTitle">
+  <div class="drawer-head">
+    <div class="drawer-title" id="callDetailTitle">呼叫明细</div>
+    <button class="modal-x" id="callDetailClose" type="button" aria-label="关闭">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    </button>
+  </div>
+  <div class="drawer-body">
+    <div class="drawer-sub">按时段展示当日叫醒 / 预离外呼与接通情况</div>
+    <div class="table-scroll">
+      <table class="atable">
+        <colgroup>
+          <col style="width:13%"><col style="width:12%"><col style="width:12%"><col style="width:12%"><col style="width:12%"><col style="width:13%"><col style="width:13%"><col style="width:13%">
+        </colgroup>
+        <thead>
+          <tr><th>时段</th><th>叫醒外呼</th><th>叫醒接通</th><th>预离外呼</th><th>预离接通</th><th>合计外呼</th><th>合计接通</th><th>接通率</th></tr>
+        </thead>
+        <tbody id="callDetailTbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 物品新增/编辑弹窗 ===== -->
+<div class="modal-mask" id="itemModal" role="dialog" aria-modal="true" aria-labelledby="itemModalTitle">
+  <div class="modal" style="max-width:460px">
+    <div class="modal-head">
+      <div class="modal-title" id="itemModalTitle">新增物品</div>
+      <button class="modal-x" id="itemModalClose" aria-label="关闭" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-label"><span class="req">*</span>物品类型</div>
+        <div class="form-field">
+          <select class="sel" id="iType" style="width:100%">
+            <option>客房布草</option>
+            <option>一次性消耗品</option>
+            <option>客房客杂</option>
+            <option>客房电器</option>
+            <option>工程配件</option>
+            <option>其他</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-label"><span class="req">*</span>物品名称</div>
+        <div class="form-field"><input class="ipt" id="iName" type="text" placeholder="请输入物品名称"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-label"><span class="req">*</span>物品数量</div>
+        <div class="form-field">
+          <input class="ipt num" id="iQty" type="number" min="1" max="9999" value="9999">
+          <div class="field-hint">默认为 9999，最大不超过 9999</div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-secondary" id="itemCancel" type="button">取消</button>
+      <button class="btn btn-primary" id="itemSave" type="button">保存</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script>
@@ -803,7 +1028,8 @@ table.atable{width:100%;table-layout:fixed;border-collapse:collapse;min-width:76
     { title:'数智通信管理', icon:'phone', items:['组织通信管理','用户分机管理','终端注册管理','通话记录日志','通话记录管理','通话记录管理-新','客户通信管理','黑白名单管理'] },
     { title:'AI智能体应用中心', icon:'bot', items:['AI-Agent智能体','智能体任务中心','智能体应用市场'] },
     { title:'通信安全管控', icon:'shield', items:['用户安全管控','终端安全管理','通话审计分析','短信审计管理','端到端消息审计','综合安全策略','敏感词管理','诉求类别管理','告警策略管理','消息通知策略管理'] },
-    { title:'智慧酒店管理', icon:'hotel', items:['酒店信息管理','借物管理'] }
+    { title:'智慧酒店管理', icon:'hotel', items:['酒店信息管理','借物管理','酒店物品管理'] },
+    { title:'酒店运营统计分析', icon:'chart', items:['主动呼叫统计分析'] }
   ];
 
   var TABS = [
@@ -863,6 +1089,7 @@ table.atable{width:100%;table-layout:fixed;border-collapse:collapse;min-width:76
     trunk:'<svg class="net-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M9.5 8.5 13 5a4.2 4.2 0 0 1 6 6l-2.6 2.6M14.5 15.5 11 19a4.2 4.2 0 0 1-6-6l2.6-2.6"/><path d="M8.8 15.2l6.4-6.4"/></svg>',
     layers:'<svg class="net-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 3.8 20.5 8 12 12.2 3.5 8z"/><path d="M3.5 12.3 12 16.5l8.5-4.2"/><path d="M3.5 16.5 12 20.7l8.5-4.2"/></svg>',
     server:'<svg class="net-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="4" y="4.5" width="16" height="5.5" rx="1.5"/><rect x="4" y="14" width="16" height="5.5" rx="1.5"/><path d="M7.2 7.2h.01M7.2 16.7h.01"/></svg>',
+    chart:'<svg class="s-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4.5 19.5h15"/><path d="M6.5 16.5v-5M11 16.5V7M15.5 16.5v-3M19.5 16.5v-8"/><path d="M4.5 3.5v16"/></svg>',
     del:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M6 7h12M9 7V5h6v2M8.5 7l.8 13h5.4l.8-13"/><path d="M10.2 10.5v6M13.8 10.5v6"/></svg>'
   };
 
@@ -898,7 +1125,9 @@ table.atable{width:100%;table-layout:fixed;border-collapse:collapse;min-width:76
         else if(m === 'AI-Agent智能体'){ location.hash = '#/agent'; }
         else if(m === '告警策略管理'){ location.hash = '#/alarm'; }
         else if(m === '借物管理'){ location.hash = '#/borrow'; }
-        else { toast('演示模式：仅展示「酒店信息管理」「AI-Agent智能体」「告警策略管理」「借物管理」页面'); }
+        else if(m === '主动呼叫统计分析'){ location.hash = '#/call'; }
+        else if(m === '酒店物品管理'){ location.hash = '#/items'; }
+        else { toast('演示模式：仅展示「酒店信息管理」「借物管理」「酒店物品管理」「AI-Agent智能体」「告警策略管理」「主动呼叫统计分析」页面'); }
       });
     });
   }
@@ -910,6 +1139,8 @@ table.atable{width:100%;table-layout:fixed;border-collapse:collapse;min-width:76
     document.getElementById('viewAgent').classList.toggle('active', v === 'agent');
     document.getElementById('viewAlarm').classList.toggle('active', v === 'alarm');
     document.getElementById('viewBorrow').classList.toggle('active', v === 'borrow');
+    document.getElementById('viewCall').classList.toggle('active', v === 'call');
+    document.getElementById('viewItems').classList.toggle('active', v === 'items');
     var crumb = document.getElementById('crumb');
     if(v === 'hotel'){
       crumb.innerHTML = '<span>首页</span><span class="sep">/</span><span class="mid">智慧酒店管理</span><span class="sep mid">/</span><span class="cur">酒店信息管理</span>';
@@ -917,13 +1148,18 @@ table.atable{width:100%;table-layout:fixed;border-collapse:collapse;min-width:76
       crumb.innerHTML = '<span>首页</span><span class="sep">/</span><span class="mid">AI智能体应用中心</span><span class="sep mid">/</span><span class="cur">AI-Agent智能体</span>';
     } else if(v === 'alarm'){
       crumb.innerHTML = '<span>首页</span><span class="sep">/</span><span class="mid">通信安全管控</span><span class="sep mid">/</span><span class="cur">告警策略管理</span>';
-    } else {
+    } else if(v === 'borrow'){
       crumb.innerHTML = '<span>首页</span><span class="sep">/</span><span class="mid">智慧酒店管理</span><span class="sep mid">/</span><span class="cur">借物管理</span>';
+    } else if(v === 'call'){
+      crumb.innerHTML = '<span>首页</span><span class="sep">/</span><span class="mid">酒店运营统计分析</span><span class="sep mid">/</span><span class="cur">主动呼叫统计分析</span>';
+    } else {
+      crumb.innerHTML = '<span>首页</span><span class="sep">/</span><span class="mid">智慧酒店管理</span><span class="sep mid">/</span><span class="cur">酒店物品管理</span>';
     }
     Array.prototype.forEach.call(document.querySelectorAll('.side-item'), function(el){
       var m = el.dataset.menu;
-      el.classList.toggle('active', (v === 'hotel' && m === '酒店信息管理') || (v === 'agent' && m === 'AI-Agent智能体') || (v === 'alarm' && m === '告警策略管理') || (v === 'borrow' && m === '借物管理'));
+      el.classList.toggle('active', (v === 'hotel' && m === '酒店信息管理') || (v === 'agent' && m === 'AI-Agent智能体') || (v === 'alarm' && m === '告警策略管理') || (v === 'borrow' && m === '借物管理') || (v === 'call' && m === '主动呼叫统计分析') || (v === 'items' && m === '酒店物品管理'));
     });
+    if(v === 'call'){ setTimeout(resizeCallCharts, 120); }
     window.scrollTo({ top: 0, behavior: 'auto' });
     closeSidebar();
   }
@@ -933,6 +1169,8 @@ table.atable{width:100%;table-layout:fixed;border-collapse:collapse;min-width:76
     if(h === '#/agent'){ renderView('agent'); }
     else if(h === '#/alarm'){ renderView('alarm'); }
     else if(h === '#/borrow'){ renderView('borrow'); }
+    else if(h === '#/call'){ renderView('call'); }
+    else if(h === '#/items'){ renderView('items'); }
     else { renderView('hotel'); }
   }
 
@@ -1767,6 +2005,603 @@ table.atable{width:100%;table-layout:fixed;border-collapse:collapse;min-width:76
     });
   }
 
+  /* ===== 酒店物品管理 ===== */
+  var ITEM_KEY = 'hotelItemsV1';
+  var ITEM_PAGE_SIZE = 20;
+  var ITEMS = loadItems();
+  var itemSeq = ITEMS.length ? (ITEMS[ITEMS.length - 1].id + 1) : 1;
+  var itemState = { page:1, type:'', kw:'' };
+  var itemModalState = { id:null };
+
+  function defaultItems(){
+    var i = 0;
+    var t = function(tp, n, q, ct){ i++; return { id:i, type:tp, name:n, qty:q, time:ct }; };
+    return [
+      t('客房布草','床单',1000,'2026-09-02 09:12:35'), t('客房布草','被套',800,'2026-09-02 09:15:12'),
+      t('客房布草','枕套',1600,'2026-09-02 09:18:40'), t('客房布草','浴巾',600,'2026-09-02 09:20:05'),
+      t('客房布草','面巾',900,'2026-09-03 10:02:18'), t('客房布草','地巾',300,'2026-09-03 10:08:46'),
+      t('客房布草','方巾',1200,'2026-09-03 10:12:27'), t('客房布草','毛毯',150,'2026-09-04 14:22:09'),
+      t('客房布草','羽绒被',80,'2026-09-04 14:26:53'),
+      t('一次性消耗品','一次性牙刷',9999,'2026-09-05 08:30:41'), t('一次性消耗品','一次性拖鞋',9999,'2026-09-05 08:34:15'),
+      t('一次性消耗品','洗发水(一次性装)',5000,'2026-09-05 08:40:02'), t('一次性消耗品','沐浴露(一次性装)',5000,'2026-09-05 08:44:37'),
+      t('一次性消耗品','梳子',3000,'2026-09-06 11:15:20'), t('一次性消耗品','剃须刀',2000,'2026-09-06 11:18:44'),
+      t('一次性消耗品','一次性纸杯',9999,'2026-09-06 11:22:08'), t('一次性消耗品','香皂',4000,'2026-09-07 09:05:31'),
+      t('客房客杂','洗衣袋',500,'2026-09-07 09:10:16'), t('客房客杂','鞋擦',300,'2026-09-07 09:14:52'),
+      t('客房客杂','信纸信封',800,'2026-09-08 15:40:23'), t('客房客杂','矿泉水',9999,'2026-09-08 15:44:05'),
+      t('客房客杂','茶叶包',3000,'2026-09-08 15:48:39'), t('客房客杂','咖啡包',2000,'2026-09-09 10:20:14'),
+      t('客房电器','吹风机',120,'2026-09-09 10:24:58'), t('客房电器','电热水壶',150,'2026-09-10 09:32:41'),
+      t('客房电器','台灯',100,'2026-09-10 09:36:22'), t('客房电器','保险箱',60,'2026-09-10 09:40:07'),
+      t('工程配件','门锁电池',400,'2026-09-11 13:08:35'), t('工程配件','节能灯泡',500,'2026-09-11 13:12:49'),
+      t('工程配件','水龙头阀芯',200,'2026-09-11 13:16:11'),
+      t('其他','应急手电筒',100,'2026-09-12 16:44:26'), t('其他','雨伞',50,'2026-09-12 16:48:13'),
+      t('其他','针线包',300,'2026-09-12 16:52:47')
+    ];
+  }
+
+  function loadItems(){
+    try{
+      var s = localStorage.getItem(ITEM_KEY);
+      if(s){ var arr = JSON.parse(s); if(arr && arr.length){ return arr; } }
+    }catch(e){}
+    return defaultItems();
+  }
+
+  function saveItems(){
+    try{ localStorage.setItem(ITEM_KEY, JSON.stringify(ITEMS)); }catch(e){}
+  }
+
+  function findItem(id){
+    for(var i=0;i<ITEMS.length;i++){ if(ITEMS[i].id === id) return ITEMS[i]; }
+    return null;
+  }
+
+  function nameExists(name, excludeId){
+    return ITEMS.some(function(it){ return it.name === name && it.id !== excludeId; });
+  }
+
+  function nowStr(){
+    var d = new Date();
+    return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()) + ' ' + pad2(d.getHours()) + ':' + pad2(d.getMinutes()) + ':' + pad2(d.getSeconds());
+  }
+
+  function filteredItems(){
+    var type = itemState.type, kw = itemState.kw.trim();
+    return ITEMS.filter(function(it){
+      if(type && it.type !== type) return false;
+      if(kw && it.name.indexOf(kw) < 0) return false;
+      return true;
+    });
+  }
+
+  function renderItemTable(){
+    var list = filteredItems();
+    var total = list.length, pages = Math.max(1, Math.ceil(total / ITEM_PAGE_SIZE));
+    if(itemState.page > pages) itemState.page = pages;
+    var start = (itemState.page - 1) * ITEM_PAGE_SIZE;
+    var pageList = list.slice(start, start + ITEM_PAGE_SIZE);
+    var tbody = document.getElementById('itemTbody');
+    if(!pageList.length){
+      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-3);padding:32px 0">暂无物品数据</td></tr>';
+    } else {
+      var h = '';
+      pageList.forEach(function(it){
+        h += '<tr>' +
+          '<td>' + it.type + '</td>' +
+          '<td>' + it.name + '</td>' +
+          '<td>' + it.qty + '</td>' +
+          '<td>' + it.time + '</td>' +
+          '<td>' +
+            '<button type="button" class="link-btn" data-op="edit" data-id="' + it.id + '">编辑</button> ' +
+            '<button type="button" class="link-btn danger" data-op="del" data-id="' + it.id + '">删除</button>' +
+          '</td>' +
+        '</tr>';
+      });
+      tbody.innerHTML = h;
+      Array.prototype.forEach.call(tbody.querySelectorAll('[data-op="edit"]'), function(b){
+        b.addEventListener('click', function(){ openItemModal(parseInt(b.dataset.id, 10)); });
+      });
+      Array.prototype.forEach.call(tbody.querySelectorAll('[data-op="del"]'), function(b){
+        b.addEventListener('click', function(){ delItem(parseInt(b.dataset.id, 10)); });
+      });
+    }
+    document.getElementById('itemTotal').textContent = String(total);
+    document.getElementById('itemPgCur').textContent = String(itemState.page);
+    var prev = document.getElementById('itemPgPrev'), next = document.getElementById('itemPgNext');
+    prev.disabled = itemState.page <= 1;
+    next.disabled = itemState.page >= pages;
+    var jump = document.getElementById('itemPgJump');
+    jump.max = String(pages);
+    jump.value = String(itemState.page);
+  }
+
+  function openItemModal(id){
+    var it = id ? findItem(id) : null;
+    itemModalState.id = id || null;
+    document.getElementById('itemModalTitle').textContent = it ? '编辑物品' : '新增物品';
+    document.getElementById('iType').value = it ? it.type : '客房布草';
+    document.getElementById('iName').value = it ? it.name : '';
+    document.getElementById('iQty').value = it ? it.qty : 9999;
+    document.getElementById('itemModal').classList.add('show');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeItemModal(){
+    document.getElementById('itemModal').classList.remove('show');
+    document.body.style.overflow = '';
+  }
+
+  function saveItem(){
+    var type = document.getElementById('iType').value;
+    var name = document.getElementById('iName').value.trim();
+    if(!name){ toast('请填写物品名称'); return; }
+    if(nameExists(name, itemModalState.id)){
+      toast('物品「' + name + '」已存在，请更换名称');
+      return;
+    }
+    var qty = parseInt(document.getElementById('iQty').value, 10);
+    if(isNaN(qty) || qty < 1){ toast('请填写有效数量（1 - 9999）'); return; }
+    if(qty > 9999){ toast('数量不能超过 9999'); return; }
+    if(itemModalState.id){
+      var it = findItem(itemModalState.id);
+      if(it){
+        it.type = type; it.name = name; it.qty = qty;
+        saveItems();
+        renderItemTable();
+        closeItemModal();
+        toast('已更新物品「' + name + '」');
+      }
+    } else {
+      ITEMS.push({ id:itemSeq++, type:type, name:name, qty:qty, time:nowStr() });
+      saveItems();
+      itemState.page = Math.max(1, Math.ceil(filteredItems().length / ITEM_PAGE_SIZE));
+      renderItemTable();
+      closeItemModal();
+      toast('已新增物品「' + name + '」');
+    }
+  }
+
+  function delItem(id){
+    var it = findItem(id);
+    if(!it) return;
+    if(window.confirm('确定删除物品「' + it.name + '」吗？')){
+      ITEMS = ITEMS.filter(function(x){ return x.id !== id; });
+      saveItems();
+      renderItemTable();
+      toast('已删除「' + it.name + '」');
+    }
+  }
+
+  function exportItems(){
+    var list = filteredItems();
+    if(!list.length){ toast('当前筛选结果为空，无可导出数据'); return; }
+    var lines = ['物品类型,物品名称,物品数量,创建时间'];
+    list.forEach(function(it){
+      lines.push([it.type, it.name, it.qty, it.time].join(','));
+    });
+    var blob = new Blob(['\ufeff' + lines.join('\r\n')], { type:'text/csv;charset=utf-8' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = '酒店物品清单-' + (itemState.type || '全部类型') + '-' + (itemState.kw || '全部名称') + '.csv';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(a.href);
+    toast('已导出 ' + list.length + ' 条物品记录');
+  }
+
+  function importItems(){
+    var input = document.getElementById('itemImportFile');
+    var f = input.files[0];
+    if(!f) return;
+    var rd = new FileReader();
+    rd.onload = function(){
+      var text = String(rd.result || '');
+      var lines = text.split(/\r?\n/).map(function(l){ return l.trim(); }).filter(function(l){ return l.length > 0; });
+      if(lines.length > 0 && /物品类型/.test(lines[0])) lines.shift();
+      var added = 0, skipped = 0;
+      lines.forEach(function(line){
+        var cols = line.split(',');
+        var tp = (cols[0] || '').trim() || '其他';
+        var nm = (cols[1] || '').trim();
+        var q = parseInt(cols[2], 10);
+        if(!nm){ skipped++; return; }
+        if(nameExists(nm)){ skipped++; return; }
+        if(isNaN(q) || q < 1){ q = 9999; }
+        if(q > 9999) q = 9999;
+        ITEMS.push({ id:itemSeq++, type:tp, name:nm, qty:q, time:nowStr() });
+        added++;
+      });
+      if(added > 0){
+        saveItems();
+        renderItemTable();
+      }
+      toast(added > 0 ? ('导入成功 ' + added + ' 条' + (skipped ? ('，跳过重复 ' + skipped + ' 条') : '')) : ('导入失败：未发现可导入数据' + (skipped ? '（重复 ' + skipped + ' 条）' : '')));
+    };
+    rd.readAsText(f, 'utf-8');
+    input.value = '';
+  }
+
+  function wireItemEvents(){
+    document.getElementById('itemAddBtn').addEventListener('click', function(){ openItemModal(null); });
+    document.getElementById('itemModalClose').addEventListener('click', closeItemModal);
+    document.getElementById('itemCancel').addEventListener('click', closeItemModal);
+    document.getElementById('itemSave').addEventListener('click', saveItem);
+    document.getElementById('itemModal').addEventListener('click', function(e){
+      if(e.target === this){ closeItemModal(); }
+    });
+    document.getElementById('itemTypeFilter').addEventListener('change', function(){
+      itemState.type = this.value;
+      itemState.page = 1;
+      renderItemTable();
+    });
+    document.getElementById('itemSearchBtn').addEventListener('click', function(){
+      itemState.kw = document.getElementById('itemSearch').value;
+      itemState.page = 1;
+      renderItemTable();
+    });
+    document.getElementById('itemResetBtn').addEventListener('click', function(){
+      itemState.type = '';
+      itemState.kw = '';
+      itemState.page = 1;
+      document.getElementById('itemTypeFilter').value = '';
+      document.getElementById('itemSearch').value = '';
+      renderItemTable();
+    });
+    document.getElementById('itemSearch').addEventListener('keydown', function(e){
+      if(e.key === 'Enter'){ document.getElementById('itemSearchBtn').click(); }
+    });
+    document.getElementById('itemPgPrev').addEventListener('click', function(){
+      if(itemState.page > 1){ itemState.page--; renderItemTable(); }
+    });
+    document.getElementById('itemPgNext').addEventListener('click', function(){
+      var pages = Math.max(1, Math.ceil(filteredItems().length / ITEM_PAGE_SIZE));
+      if(itemState.page < pages){ itemState.page++; renderItemTable(); }
+    });
+    document.getElementById('itemPgGo').addEventListener('click', function(){
+      var p = parseInt(document.getElementById('itemPgJump').value, 10);
+      var pages = Math.max(1, Math.ceil(filteredItems().length / ITEM_PAGE_SIZE));
+      if(isNaN(p) || p < 1){ p = 1; }
+      if(p > pages) p = pages;
+      itemState.page = p;
+      renderItemTable();
+    });
+    document.getElementById('itemImportBtn').addEventListener('click', function(){
+      document.getElementById('itemImportFile').click();
+    });
+    document.getElementById('itemImportFile').addEventListener('change', importItems);
+    document.getElementById('itemExportBtn').addEventListener('click', exportItems);
+  }
+
+  /* ===== 主动呼叫统计分析 ===== */
+  var CALL_TABS = ['当日','本周','当月','近三月','近半年','全年','自定义日期'];
+  var CALL_RANGE = { from:'2026-10-01 00:00:00', to:'2026-10-31 23:59:59', tab:'当月' };
+  var callCharts = { daily:null, hourly:null };
+  var WAKE_DIST = [[6,5],[7,28],[8,32],[9,20],[10,10],[11,5]];
+  var PRE_DIST = [[8,6],[9,10],[10,18],[11,20],[12,14],[13,12],[14,8],[15,5],[16,3],[17,2],[18,2],[19,1],[20,1]];
+
+  function pad2(n){ return (n < 10 ? '0' : '') + n; }
+
+  function callDaySeed(key){
+    var p = key.split('-');
+    var s = ((+p[0]) * 10000 + (+p[1]) * 100 + (+p[2])) % 2147483647;
+    if(s <= 0) s += 2147483646;
+    return function(){
+      s = (s * 16807) % 2147483647;
+      return (s - 1) / 2147483646;
+    };
+  }
+
+  function genDayStat(key){
+    var r = callDaySeed(key);
+    var wake = 55 + Math.floor(r() * 36);
+    var wakeAns = Math.min(wake, Math.floor(wake * (0.66 + r() * 0.10)));
+    var pre = 60 + Math.floor(r() * 40);
+    var preAns = Math.min(pre, Math.floor(pre * (0.60 + r() * 0.14)));
+    return { key:key, wake:wake, wakeAns:wakeAns, pre:pre, preAns:preAns };
+  }
+
+  function fmtDay(d){
+    return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
+  }
+
+  function dateKeysBetween(fromStr, toStr){
+    var f = new Date(fromStr.replace(' ', 'T'));
+    var t = new Date(toStr.replace(' ', 'T'));
+    if(isNaN(f.getTime()) || isNaN(t.getTime()) || f > t) return [];
+    var keys = [], d = new Date(f.getFullYear(), f.getMonth(), f.getDate());
+    while(d <= t){
+      keys.push(fmtDay(d));
+      d = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1);
+    }
+    return keys;
+  }
+
+  function genHourly(days){
+    var hours = [], idx = {};
+    for(var h = 6; h <= 20; h++){
+      var o = { hour:h, wake:0, wakeAns:0, pre:0, preAns:0 };
+      hours.push(o); idx[h] = o;
+    }
+    days.forEach(function(d){
+      var wr = callDaySeed(d.key + 'w'), pr = callDaySeed(d.key + 'p');
+      var wkR = d.wake ? d.wakeAns / d.wake : 0, prR = d.pre ? d.preAns / d.pre : 0;
+      WAKE_DIST.forEach(function(p){
+        var o = idx[p[0]];
+        var n = Math.round(d.wake * p[1] / 100);
+        o.wake += n; o.wakeAns += Math.round(n * wkR);
+      });
+      PRE_DIST.forEach(function(p){
+        var o = idx[p[0]];
+        var n = Math.round(d.pre * p[1] / 100);
+        o.pre += n; o.preAns += Math.round(n * prR);
+      });
+    });
+    return hours;
+  }
+
+  function callSummary(days){
+    var s = { total:0, ans:0, fail:0, wake:0, wakeAns:0, wakeFail:0, pre:0, preAns:0, preFail:0 };
+    days.forEach(function(d){
+      s.wake += d.wake; s.wakeAns += d.wakeAns;
+      s.pre += d.pre; s.preAns += d.preAns;
+    });
+    s.total = s.wake + s.pre;
+    s.ans = s.wakeAns + s.preAns;
+    s.fail = s.total - s.ans;
+    s.wakeFail = s.wake - s.wakeAns;
+    s.preFail = s.pre - s.preAns;
+    s.wakeRate = s.wake ? s.wakeAns / s.wake * 100 : 0;
+    s.preRate = s.pre ? s.preAns / s.pre * 100 : 0;
+    s.ansRate = s.total ? s.ans / s.total * 100 : 0;
+    s.failRate = s.total ? s.fail / s.total * 100 : 0;
+    return s;
+  }
+
+  function setText(id, v){ var el = document.getElementById(id); if(el) el.textContent = v; }
+
+  function currentCallDays(){
+    return dateKeysBetween(CALL_RANGE.from, CALL_RANGE.to).map(genDayStat);
+  }
+
+  function renderCallCards(days){
+    var s = callSummary(days);
+    setText('callTotal', String(s.total));
+    setText('callAns', String(s.ans));
+    setText('callAnsRate', s.ansRate.toFixed(1) + '%');
+    setText('callFail', String(s.fail));
+    setText('callFailRate', s.failRate.toFixed(1) + '%');
+    setText('callWake', String(s.wake));
+    setText('callWakeAns', String(s.wakeAns));
+    setText('callWakeFail', String(s.wakeFail));
+    setText('callPre', String(s.pre));
+    setText('callPreAns', String(s.preAns));
+    setText('callPreFail', String(s.preFail));
+    setText('callWakeRate', s.wakeRate.toFixed(1) + '%');
+    setText('callWakeRateSub', '接通 ' + s.wakeAns + ' / 外呼 ' + s.wake);
+    setText('callPreRate', s.preRate.toFixed(1) + '%');
+    setText('callPreRateSub', '接通 ' + s.preAns + ' / 外呼 ' + s.pre);
+    setText('callFailRateBig', s.failRate.toFixed(1) + '%');
+    setText('callFailRateSub', '未接通 ' + s.fail + ' 通');
+  }
+
+  function renderCallCharts(days){
+    var dailyEl = document.getElementById('callDailyChart');
+    var hourEl = document.getElementById('callHourlyChart');
+    if(!window.echarts){
+      dailyEl.className = 'chart-empty'; dailyEl.innerHTML = '图表组件未加载，请联网后刷新页面';
+      hourEl.className = 'chart-empty'; hourEl.innerHTML = '图表组件未加载，请联网后刷新页面';
+      return;
+    }
+    if(!callCharts.daily) callCharts.daily = echarts.init(dailyEl);
+    if(!callCharts.hourly) callCharts.hourly = echarts.init(hourEl);
+    setText('dailySub', '共 ' + days.length + ' 天');
+    var dates = days.map(function(d){ return d.key.slice(5); });
+    callCharts.daily.setOption({
+      color:['#3A7BFF','#7CB3FF','#E5493A'],
+      tooltip:{ trigger:'axis' },
+      legend:{ data:['预离外呼','叫醒外呼','未接通率'], top:0, right:8, textStyle:{ color:'#5A6473', fontSize:12 } },
+      grid:{ left:44, right:50, top:44, bottom:26 },
+      xAxis:{ type:'category', data:dates, axisLine:{ lineStyle:{ color:'#D8DEE9' } }, axisLabel:{ color:'#5A6473', fontSize:11 }, axisTick:{ show:false } },
+      yAxis:[
+        { type:'value', name:'外呼量', nameTextStyle:{ color:'#909AA9', fontSize:11 }, splitLine:{ lineStyle:{ color:'#EEF1F6' } } },
+        { type:'value', name:'未接通率', nameTextStyle:{ color:'#909AA9', fontSize:11 }, max:100, axisLabel:{ formatter:'{value}%' }, splitLine:{ show:false } }
+      ],
+      series:[
+        { name:'预离外呼', type:'bar', data:days.map(function(d){ return d.pre; }), itemStyle:{ color:'#3A7BFF', borderRadius:[3,3,0,0] }, barMaxWidth:14 },
+        { name:'叫醒外呼', type:'bar', data:days.map(function(d){ return d.wake; }), itemStyle:{ color:'#7CB3FF', borderRadius:[3,3,0,0] }, barMaxWidth:14 },
+        { name:'未接通率', type:'line', yAxisIndex:1, smooth:true, symbolSize:5,
+          lineStyle:{ color:'#E5493A', width:2 }, itemStyle:{ color:'#E5493A' },
+          data:days.map(function(d){
+            var tot = d.wake + d.pre;
+            return tot ? +((tot - d.wakeAns - d.preAns) / tot * 100).toFixed(1) : 0;
+          }) }
+      ]
+    });
+    var hrs = genHourly(days);
+    setText('hourSub', '06:00 - 20:00');
+    callCharts.hourly.setOption({
+      color:['#3A7BFF','#18A058'],
+      tooltip:{ trigger:'axis' },
+      legend:{ data:['呼叫量','接通率'], top:0, right:8, textStyle:{ color:'#5A6473', fontSize:12 } },
+      grid:{ left:44, right:50, top:44, bottom:26 },
+      xAxis:{ type:'category', data:hrs.map(function(h){ return pad2(h.hour) + ':00'; }), axisLine:{ lineStyle:{ color:'#D8DEE9' } }, axisLabel:{ color:'#5A6473', fontSize:11 }, axisTick:{ show:false } },
+      yAxis:[
+        { type:'value', name:'呼叫量', nameTextStyle:{ color:'#909AA9', fontSize:11 }, splitLine:{ lineStyle:{ color:'#EEF1F6' } } },
+        { type:'value', name:'接通率', nameTextStyle:{ color:'#909AA9', fontSize:11 }, max:100, axisLabel:{ formatter:'{value}%' }, splitLine:{ show:false } }
+      ],
+      series:[
+        { name:'呼叫量', type:'bar', data:hrs.map(function(h){ return h.wake + h.pre; }), itemStyle:{ color:'#3A7BFF', borderRadius:[3,3,0,0] }, barMaxWidth:16 },
+        { name:'接通率', type:'line', yAxisIndex:1, smooth:true, symbolSize:5,
+          lineStyle:{ color:'#18A058', width:2 }, itemStyle:{ color:'#18A058' },
+          data:hrs.map(function(h){
+            var tot = h.wake + h.pre;
+            return tot ? +((h.wakeAns + h.preAns) / tot * 100).toFixed(1) : 0;
+          }) }
+      ]
+    });
+  }
+
+  function resizeCallCharts(){
+    if(callCharts.daily) callCharts.daily.resize();
+    if(callCharts.hourly) callCharts.hourly.resize();
+  }
+
+  function renderCallTable(days){
+    var tbody = document.getElementById('callTbody');
+    if(!days.length){
+      tbody.innerHTML = '<tr><td colspan="14" style="text-align:center;color:var(--text-3);padding:32px 0">暂无统计数据</td></tr>';
+      setText('callTotal2', '0');
+      return;
+    }
+    var h = '';
+    days.forEach(function(d){
+      var tot = d.wake + d.pre, ans = d.wakeAns + d.preAns, fail = tot - ans;
+      var fr = tot ? (fail / tot * 100).toFixed(1) : '0.0';
+      var wr = d.wake ? (d.wakeAns / d.wake * 100).toFixed(1) : '0.0';
+      var pr = d.pre ? (d.preAns / d.pre * 100).toFixed(1) : '0.0';
+      h += '<tr>' +
+        '<td>' + d.key + '</td>' +
+        '<td>' + tot + '</td><td>' + ans + '</td><td>' + fail + '</td><td>' + fr + '%</td>' +
+        '<td>' + d.wake + '</td><td>' + d.wakeAns + '</td><td>' + (d.wake - d.wakeAns) + '</td><td>' + wr + '%</td>' +
+        '<td>' + d.pre + '</td><td>' + d.preAns + '</td><td>' + (d.pre - d.preAns) + '</td><td>' + pr + '%</td>' +
+        '<td><button type="button" class="link-btn" data-detail="' + d.key + '">查看详情</button></td>' +
+      '</tr>';
+    });
+    tbody.innerHTML = h;
+    setText('callTotal2', String(days.length));
+    Array.prototype.forEach.call(tbody.querySelectorAll('[data-detail]'), function(b){
+      b.addEventListener('click', function(){ openCallDetail(b.dataset.detail); });
+    });
+  }
+
+  function openCallDetail(key){
+    var d = genDayStat(key);
+    var hrs = genHourly([d]);
+    setText('callDetailTitle', key + ' 呼叫明细');
+    var h = '', tW = 0, tWA = 0, tP = 0, tPA = 0;
+    hrs.forEach(function(hr){
+      var tot = hr.wake + hr.pre, ans = hr.wakeAns + hr.preAns;
+      tW += hr.wake; tWA += hr.wakeAns; tP += hr.pre; tPA += hr.preAns;
+      var rate = tot ? (ans / tot * 100).toFixed(1) : '0.0';
+      h += '<tr>' +
+        '<td>' + pad2(hr.hour) + ':00</td>' +
+        '<td>' + hr.wake + '</td><td>' + hr.wakeAns + '</td>' +
+        '<td>' + hr.pre + '</td><td>' + hr.preAns + '</td>' +
+        '<td>' + tot + '</td><td>' + ans + '</td><td>' + rate + '%</td>' +
+      '</tr>';
+    });
+    var tTot = tW + tP, tAns = tWA + tPA;
+    h += '<tr class="tot-row"><td>合计</td><td>' + tW + '</td><td>' + tWA + '</td><td>' + tP + '</td><td>' + tPA + '</td><td>' + tTot + '</td><td>' + tAns + '</td><td>' + (tTot ? (tAns / tTot * 100).toFixed(1) : '0.0') + '%</td></tr>';
+    document.getElementById('callDetailTbody').innerHTML = h;
+    document.getElementById('callDetailMask').classList.add('show');
+    document.getElementById('callDetailDrawer').classList.add('show');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeCallDetail(){
+    document.getElementById('callDetailMask').classList.remove('show');
+    document.getElementById('callDetailDrawer').classList.remove('show');
+    document.body.style.overflow = '';
+  }
+
+  function exportCallCsv(){
+    var days = currentCallDays();
+    if(!days.length){ toast('当前区间无数据'); return; }
+    var lines = ['日期,外呼总数,接通数,失败数,未接通率,叫醒外呼,叫醒接通,叫醒失败,叫醒接通率,预离外呼,预离接通,预离失败,预离接通率'];
+    days.forEach(function(d){
+      var tot = d.wake + d.pre, ans = d.wakeAns + d.preAns, fail = tot - ans;
+      lines.push([
+        d.key, tot, ans, fail, (tot ? (fail / tot * 100).toFixed(1) : '0.0') + '%',
+        d.wake, d.wakeAns, d.wake - d.wakeAns, (d.wake ? (d.wakeAns / d.wake * 100).toFixed(1) : '0.0') + '%',
+        d.pre, d.preAns, d.pre - d.preAns, (d.pre ? (d.preAns / d.pre * 100).toFixed(1) : '0.0') + '%'
+      ].join(','));
+    });
+    var blob = new Blob(['\ufeff' + lines.join('\r\n')], { type:'text/csv;charset=utf-8' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = '主动呼叫统计-' + CALL_RANGE.from.slice(0, 10) + '至' + CALL_RANGE.to.slice(0, 10) + '.csv';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(a.href);
+    toast('已导出 ' + days.length + ' 天汇总数据');
+  }
+
+  function applyCallTab(tab){
+    var t = new Date(), y = t.getFullYear(), m = t.getMonth(), d0 = new Date(y, m, t.getDate());
+    var f, t2;
+    if(tab === '当日'){ f = d0; t2 = d0; }
+    else if(tab === '本周'){
+      var wd = (d0.getDay() + 6) % 7;
+      f = new Date(y, m, d0.getDate() - wd);
+      t2 = new Date(f.getFullYear(), f.getMonth(), f.getDate() + 6);
+    }
+    else if(tab === '当月'){ f = new Date(y, m, 1); t2 = new Date(y, m + 1, 0); }
+    else if(tab === '近三月'){ f = new Date(y, m - 2, 1); t2 = new Date(y, m + 1, 0); }
+    else if(tab === '近半年'){ f = new Date(y, m - 5, 1); t2 = new Date(y, m + 1, 0); }
+    else if(tab === '全年'){ f = new Date(y, 0, 1); t2 = new Date(y, 11, 31); }
+    else { return; }
+    CALL_RANGE.from = fmtDay(f) + ' 00:00:00';
+    CALL_RANGE.to = fmtDay(t2) + ' 23:59:59';
+    CALL_RANGE.tab = tab;
+    syncCallFilter();
+    renderCall();
+  }
+
+  function syncCallFilter(){
+    Array.prototype.forEach.call(document.querySelectorAll('.tab-pill'), function(p){
+      p.classList.toggle('on', p.dataset.tab === CALL_RANGE.tab);
+    });
+    document.getElementById('callFrom').value = CALL_RANGE.from;
+    document.getElementById('callTo').value = CALL_RANGE.to;
+  }
+
+  function renderCall(){
+    var days = currentCallDays();
+    if(!days.length){
+      toast('日期范围无效或区间过大，请重新选择');
+      return;
+    }
+    renderCallCards(days);
+    renderCallCharts(days);
+    renderCallTable(days);
+    setText('callRangeText', '统计区间 ' + CALL_RANGE.from.slice(0, 10) + ' ~ ' + CALL_RANGE.to.slice(0, 10) + '（' + days.length + ' 天）');
+  }
+
+  function wireCallEvents(){
+    Array.prototype.forEach.call(document.querySelectorAll('.tab-pill'), function(p){
+      p.addEventListener('click', function(){ applyCallTab(p.dataset.tab); });
+    });
+    document.getElementById('callSearchBtn').addEventListener('click', function(){
+      var f = document.getElementById('callFrom').value.trim();
+      var t = document.getElementById('callTo').value.trim();
+      var nf = new Date(f.replace(' ', 'T')), nt = new Date(t.replace(' ', 'T'));
+      if(!f || !t || isNaN(nf.getTime()) || isNaN(nt.getTime())){
+        toast('请填写正确的日期时间，格式如 2026-10-01 00:00:00');
+        return;
+      }
+      if(nf > nt){ toast('开始时间不能晚于结束时间'); return; }
+      if(nt.getTime() - nf.getTime() > 366 * 86400000){ toast('统计区间不能超过 366 天'); return; }
+      CALL_RANGE.from = f;
+      CALL_RANGE.to = t;
+      CALL_RANGE.tab = '自定义日期';
+      syncCallFilter();
+      renderCall();
+    });
+    document.getElementById('callResetBtn').addEventListener('click', function(){
+      applyCallTab('当月');
+    });
+    document.getElementById('callExportBtn').addEventListener('click', exportCallCsv);
+    document.getElementById('callDetailClose').addEventListener('click', closeCallDetail);
+    document.getElementById('callDetailMask').addEventListener('click', closeCallDetail);
+    document.addEventListener('keydown', function(e){
+      if(e.key === 'Escape'){ closeCallDetail(); }
+    });
+    window.addEventListener('resize', function(){
+      if(state.view === 'call'){ resizeCallCharts(); }
+    });
+  }
+
   /* ===== 顶栏 / 抽屉事件 ===== */
   function wireChrome(){
     var sidebar = document.getElementById('sidebar');
@@ -1798,10 +2633,14 @@ table.atable{width:100%;table-layout:fixed;border-collapse:collapse;min-width:76
   renderAgents();
   renderStrategies(STRATEGIES);
   renderBorrowTable(BORROW_ITEMS);
+  renderItemTable();
+  renderCall();
   wireHotelEvents();
   wireModalEvents();
   wireAlarmEvents();
   wireBorrowEvents();
+  wireItemEvents();
+  wireCallEvents();
   wireChrome();
   switchTab('roomState');
   window.addEventListener('hashchange', route);

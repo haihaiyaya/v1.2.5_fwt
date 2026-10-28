@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>客房做房工单系统 - 移动端高保真原型</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#0591FC',
+                        primaryHover: '#0375D1',
+                        accent: '#FF9500',
+                        bgBase: '#F4F4F8',
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <!-- Inter Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background-color: #F4F4F8;
+            -webkit-tap-highlight-color: transparent;
+        }
+        /* 自定义平滑过渡动画 */
+        .page-transition {
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        /* 隐藏滚动条但保留功能 */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        @keyframes pulseGlow {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(5, 145, 252, 0.3); }
+            50% { box-shadow: 0 0 0 12px rgba(5, 145, 252, 0); }
+        }
+        .pulse-btn {
+            animation: pulseGlow 2.5s infinite;
+        }
+    </style>
+</head>
+<body class="bg-bgBase text-slate-800 antialiased flex justify-center items-center min-h-screen">
+
+    <!-- 手机外框容器 (移动端预览最佳效果) -->
+    <div class="w-full max-w-md bg-slate-50 min-h-screen shadow-2xl relative flex flex-col overflow-hidden pb-24">
+
+        <!-- ================= 页面 1：首页 (Home) ================= -->
+        <div id="page-home" class="page-transition flex flex-col flex-1">
+            <!-- 头部 Bento 风格概览 -->
+            <div class="bg-gradient-to-br from-primary to-[#0375D1] text-white px-5 pt-8 pb-10 rounded-b-[28px] shadow-lg relative overflow-hidden">
+                <div class="absolute -right-10 -bottom-10 w-40 h-40 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
+                
+                <div class="flex items-center justify-between mb-6">
+                    <div>
+                        <span class="text-xs uppercase tracking-wider bg-white/20 px-2.5 py-1 rounded-full font-medium">楼层管家端</span>
+                        <h1 class="text-2xl font-bold mt-2 tracking-tight">客房做房工单</h1>
+                    </div>
+                    <div class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center backdrop-blur-md">
+                        <i class="ph-bold ph-user-gear text-xl"></i>
+                    </div>
+                </div>
+
+                <!-- Bento 统计卡片网格 -->
+                <div class="grid grid-cols-3 gap-3">
+                    <div class="bg-white/15 backdrop-blur-md p-3.5 rounded-2xl border border-white/10">
+                        <div class="text-2xl font-bold tracking-tight" id="stat-total">6</div>
+                        <div class="text-xs text-white/80 mt-0.5 font-medium">当天总工单</div>
+                    </div>
+                    <div class="bg-white/15 backdrop-blur-md p-3.5 rounded-2xl border border-white/10">
+                        <div class="text-2xl font-bold tracking-tight text-amber-200" id="stat-doing">4</div>
+                        <div class="text-xs text-white/80 mt-0.5 font-medium">进行中</div>
+                    </div>
+                    <div class="bg-white/15 backdrop-blur-md p-3.5 rounded-2xl border border-white/10">
+                        <div class="text-2xl font-bold tracking-tight text-emerald-200" id="stat-done">2</div>
+                        <div class="text-xs text-white/80 mt-0.5 font-medium">已完成</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 主体交互区 -->
+            <div class="px-5 -mt-4 z-10 flex-1 flex flex-col">
+                <!-- 状态指示卡片 (默认空闲，上线后动态展示) -->
+                <div id="card-status-idle" class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 mb-4 flex items-center justify-between">
+                    <div class="flex items-center space-x-3.5">
+                        <div class="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-400">
+                            <i class="ph-fill ph-moon text-2xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-slate-700 text-base">当前状态：待上线</h3>
+                            <p class="text-xs text-slate-400 mt-0.5">请选择做房房间范围并确认上线</p>
+                        </div>
+                    </div>
+                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-500">休息中</span>
+                </div>
+
+                <!-- 做房中实时状态展示卡片 (上线后显示) -->
+                <div id="card-status-working" class="bg-gradient-to-r from-amber-50 to-orange-50 rounded-2xl p-5 border border-amber-200 mb-4 hidden shadow-sm">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center space-x-2.5">
+                            <div class="w-3 h-3 rounded-full bg-accent animate-ping"></div>
+                            <span class="font-bold text-amber-900 text-base">做房中 / 工单接收中</span>
+                        </div>
+                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-accent/20 text-accent">实时派单</span>
+                    </div>
+                    <!-- 已选范围标签容器 -->
+                    <div class="bg-white/80 backdrop-blur-sm rounded-xl p-3 border border-amber-100">
+                        <div class="text-xs text-slate-500 mb-1.5 font-medium flex items-center justify-between">
+                            <span>已选接收房间范围</span>
+                            <span id="working-count-badge" class="text-primary font-semibold">已选 0 间</span>
+                        </div>
+                        <div id="working-tags-container" class="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto no-scrollbar">
+                            <!-- 标签动态渲染 -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 开始做房大按钮 (空闲时展示) -->
+                <div id="section-action-idle" class="mt-2">
+                    <button onclick="goToSelectRoom('new')" class="w-full bg-primary hover:bg-primaryHover text-white py-4 rounded-2xl font-bold text-lg shadow-lg shadow-primary/25 pulse-btn transition-all flex items-center justify-center space-x-2">
+                        <i class="ph-bold ph-play-circle text-2xl"></i>
+                        <span>开始做房</span>
+                    </button>
+                    <p class="text-center text-xs text-slate-400 mt-3">点击后选择楼层与房间以接收智能派单</p>
+                </div>
+
+                <!-- 做房中控制按钮组 (上线后展示) -->
+                <div id="section-action-working" class="space-y-3 mt-2 hidden">
+                    <button onclick="goToSelectRoom('edit')" class="w-full bg-white hover:bg-slate-50 text-primary border border-primary/30 py-3.5 rounded-2xl font-semibold text-base shadow-sm transition-all flex items-center justify-center space-x-2">
+                        <i class="ph-bold ph-pencil-simple text-xl"></i>
+                        <span>编辑调整房间</span>
+                    </button>
+                    <button onclick="showExitModal()" class="w-full bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 py-3.5 rounded-2xl font-semibold text-base transition-all flex items-center justify-center space-x-2">
+                        <i class="ph-bold ph-sign-out text-xl"></i>
+                        <span>退出做房 / 停止派单</span>
+                    </button>
+                </div>
+
+                <!-- 底部温馨提示卡片 -->
+                <div class="mt-auto pt-6 pb-4">
+                    <div class="bg-blue-50/70 border border-blue-100 rounded-2xl p-4 flex items-start space-x-3">
+                        <i class="ph-fill ph-info text-primary text-xl mt-0.5"></i>
+                        <div class="text-xs text-blue-900 leading-relaxed">
+                            <span class="font-semibold block mb-0.5">SaaS 智能派单提示</span>
+                            上线后系统将根据您的当前房间范围自动分发退房清扫、客品补充及日常布草更换工单。
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= 页面 2：选房全屏页 (Select Room) ================= -->
+        <div id="page-select" class="page-transition absolute inset-0 bg-slate-50 flex flex-col hidden z-20">
+            <!-- 顶栏 -->
+            <div class="bg-white px-4 py-3.5 border-b border-slate-100 flex items-center justify-between sticky top-0 z-30">
+                <button onclick="goBackHome()" class="w-9 h-9 rounded-xl bg-slate-100 flex items-center justify-center text-slate-600 hover:bg-slate-200 transition-colors">
+                    <i class="ph-bold ph-arrow-left text-lg"></i>
+                </button>
+                <h2 class="font-bold text-slate-800 text-base" id="select-page-title">选择做房房间范围</h2>
+                <div class="w-9"></div> <!-- 占位保持居中 -->
+            </div>
+
+            <!-- 筛选控制区：楼栋与楼层切换 -->
+            <div class="bg-white px-4 py-3 border-b border-slate-100 space-y-3">
+                <div>
+                    <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-2">选择楼栋</label>
+                    <div class="flex space-x-2" id="building-tabs">
+                        <button onclick="selectBuilding('A栋')" data-building="A栋" class="building-btn flex-1 py-2.5 rounded-xl text-sm font-bold border transition-all bg-primary text-white border-primary shadow-sm">A 栋</button>
+                        <button onclick="selectBuilding('B栋')" data-building="B栋" class="building-btn flex-1 py-2.5 rounded-xl text-sm font-bold border transition-all bg-slate-100 text-slate-600 border-slate-200">B 栋</button>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-2">选择楼层</label>
+                    <div class="grid grid-cols-5 gap-2" id="floor-tabs">
+                        <!-- 楼层按钮由 JS 动态渲染 -->
+                    </div>
+                </div>
+
+                <!-- 全选工具栏 -->
+                <div class="flex items-center justify-between pt-2 border-t border-slate-100">
+                    <label class="flex items-center space-x-2.5 cursor-pointer">
+                        <input type="checkbox" id="check-all-floor" onchange="toggleSelectAllFloor(this)" class="w-5 h-5 rounded text-primary focus:ring-primary border-slate-300">
+                        <span class="text-sm font-semibold text-slate-700">全选当前楼层所有房间</span>
+                    </label>
+                    <span class="text-xs text-slate-400 font-medium" id="floor-total-hint">共 5 间客房</span>
+                </div>
+            </div>
+
+            <!-- 房间网格列表 -->
+            <div class="flex-1 overflow-y-auto p-4" id="room-grid-container">
+                <!-- 动态渲染房间卡片 -->
+            </div>
+
+            <!-- 底部粘性结算栏 -->
+            <div class="bg-white px-5 py-3.5 border-t border-slate-200 flex items-center justify-between shadow-lg">
+                <div>
+                    <span class="text-xs text-slate-400 block">已选范围</span>
+                    <span class="text-base font-bold text-slate-800"><span id="selected-count-num" class="text-primary font-extrabold text-lg">0</span> 间房</span>
+                </div>
+                <button id="btn-goto-preview" onclick="goToPreview()" disabled class="bg-primary hover:bg-primaryHover disabled:bg-slate-300 text-white px-6 py-3 rounded-2xl font-bold text-sm shadow-md transition-all flex items-center space-x-2">
+                    <span>预览确认</span>
+                    <i class="ph-bold ph-arrow-right"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- ================= 页面 3：预览确认页 (Preview) ================= -->
+        <div id="page-preview" class="page-transition absolute inset-0 bg-slate-50 flex flex-col hidden z-30">
+            <!-- 顶栏 -->
+            <div class="bg-white px-4 py-3.5 border-b border-slate-100 flex items-center justify-between sticky top-0 z-10">
+                <button onclick="goBackSelect()" class="w-9 h-9 rounded-xl bg-slate-100 flex items-center justify-center text-slate-600 hover:bg-slate-200 transition-colors">
+                    <i class="ph-bold ph-arrow-left text-lg"></i>
+                </button>
+                <h2 class="font-bold text-slate-800 text-base">选房清单预览</h2>
+                <div class="w-9"></div>
+            </div>
+
+            <div class="p-5 flex-1 overflow-y-auto space-y-4">
+                <!-- 核心确认卡片 -->
+                <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 space-y-5">
+                    <div class="flex items-center space-x-3 text-primary">
+                        <div class="w-10 h-10 rounded-2xl bg-blue-50 flex items-center justify-center text-xl font-bold">
+                            <i class="ph-bold ph-buildings"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-slate-800 text-base">确认接收以下房间工单？</h3>
+                            <p class="text-xs text-slate-400 mt-0.5">上线后即刻生效，可随时进行编辑或退出</p>
+                        </div>
+                    </div>
+
+                    <div class="space-y-3 pt-2 border-t border-slate-100">
+                        <div class="flex justify-between items-center text-sm">
+                            <span class="text-slate-400 font-medium">目标楼栋</span>
+                            <span class="font-bold text-slate-700 bg-slate-100 px-3 py-1 rounded-xl" id="preview-building">A栋</span>
+                        </div>
+                        <div class="flex justify-between items-center text-sm">
+                            <span class="text-slate-400 font-medium">当前楼层</span>
+                            <span class="font-bold text-slate-700 bg-slate-100 px-3 py-1 rounded-xl" id="preview-floor">3层</span>
+                        </div>
+                        <div>
+                            <span class="text-slate-400 font-medium text-sm block mb-2">已选房间明细：</span>
+                            <div id="preview-room-tags" class="flex flex-wrap gap-1.5 p-3.5 bg-slate-50 rounded-2xl border border-slate-100 max-h-48 overflow-y-auto">
+                                <!-- 标签渲染 -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 底部操作按钮 -->
+                <div class="flex space-x-3 pt-4">
+                    <button onclick="goBackSelect()" class="flex-1 bg-white hover:bg-slate-100 border border-slate-200 text-slate-600 py-4 rounded-2xl font-bold text-base transition-all">
+                        返回重选
+                    </button>
+                    <button onclick="confirmOnline()" class="flex-1 bg-primary hover:bg-primaryHover text-white py-4 rounded-2xl font-bold text-base shadow-lg shadow-primary/25 transition-all flex items-center justify-center space-x-2">
+                        <i class="ph-bold ph-check-circle text-xl"></i>
+                        <span>确认上线</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= 弹窗：实时工单推送 Toast/Modal ================= -->
+        <div id="modal-task" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden transition-opacity">
+            <div class="bg-white rounded-3xl w-full max-w-sm p-6 shadow-2xl transform transition-transform scale-95 animate-in fade-in zoom-in duration-200">
+                <div class="flex items-center justify-between mb-4">
+                    <span id="task-badge" class="px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-700 flex items-center space-x-1">
+                        <i class="ph-fill ph-bell-ringing animate-bounce"></i>
+                        <span id="task-type-text">退房清扫工单</span>
+                    </span>
+                    <span class="text-xs text-slate-400 font-medium">刚刚</span>
+                </div>
+
+                <div class="text-center my-6">
+                    <div class="w-16 h-16 bg-blue-50 text-primary rounded-3xl flex items-center justify-center mx-auto mb-3 shadow-inner">
+                        <i id="task-icon" class="ph-bold ph-broom text-3xl"></i>
+                    </div>
+                    <h3 id="task-room-title" class="text-2xl font-bold text-slate-800 tracking-tight">A栋 301室</h3>
+                    <p id="task-desc-text" class="text-slate-500 text-sm mt-1">客房已退房，请及时前往进行标准退房保洁与布草更换。</p>
+                </div>
+
+                <div class="bg-slate-50 rounded-2xl p-3.5 mb-6 text-xs text-slate-600 space-y-1.5 border border-slate-100">
+                    <div class="flex justify-between">
+                        <span class="text-slate-400">工单来源：</span>
+                        <span class="font-semibold text-slate-700">前台自动派单系统</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-slate-400">预计耗时：</span>
+                        <span class="font-semibold text-slate-700">约 30 分钟</span>
+                    </div>
+                </div>
+
+                <div class="flex space-x-3">
+                    <button onclick="closeTaskModal()" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-600 py-3.5 rounded-2xl font-bold text-sm transition-all">
+                        稍后处理
+                    </button>
+                    <button onclick="handleTaskComplete()" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white py-3.5 rounded-2xl font-bold text-sm shadow-lg shadow-emerald-600/20 transition-all flex items-center justify-center space-x-1">
+                        <i class="ph-bold ph-check text-lg"></i>
+                        <span>完成工单</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= 弹窗：退出做房二次确认 ================= -->
+        <div id="modal-exit" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+            <div class="bg-white rounded-3xl w-full max-w-sm p-6 shadow-2xl">
+                <div class="text-center my-4">
+                    <div class="w-14 h-14 bg-red-50 text-red-500 rounded-3xl flex items-center justify-center mx-auto mb-3">
+                        <i class="ph-bold ph-warning text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-800">确认退出做房？</h3>
+                    <p class="text-slate-500 text-sm mt-1.5 leading-relaxed">退出后将停止接收该范围的实时工单推送，确定要离线吗？</p>
+                </div>
+                <div class="flex space-x-3 mt-6">
+                    <button onclick="closeExitModal()" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-600 py-3.5 rounded-2xl font-bold text-sm transition-all">
+                        取消
+                    </button>
+                    <button onclick="confirmExitWorking()" class="flex-1 bg-red-600 hover:bg-red-700 text-white py-3.5 rounded-2xl font-bold text-sm shadow-lg shadow-red-600/20 transition-all">
+                        确认退出
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= 浮动通知 Toast ================= -->
+        <div id="toast-message" class="fixed top-6 left-1/2 -translate-x-1/2 bg-slate-900/90 backdrop-blur-md text-white px-5 py-3 rounded-2xl shadow-xl z-50 text-sm font-medium transition-all duration-300 opacity-0 pointer-events-none transform -translate-y-4 flex items-center space-x-2.5">
+            <i id="toast-icon" class="ph-bold ph-check-circle text-emerald-400 text-lg"></i>
+            <span id="toast-text">操作成功</span>
+        </div>
+    </div>
+
+    <!-- JavaScript 核心业务逻辑 -->
+    <script>
+        // 数据模型
+        const FLOOR_LIST = ['3层','4层','5层','6层','7层','8层','9层','10层','11层','12层']; // 共 10 层
+        const ROOMS_PER_FLOOR = 25; // 每层 25 间
+        let state = {
+            isWorking: false,
+            statTotal: 6,
+            statDoing: 4,
+            statDone: 2,
+            currentBuilding: 'A栋',
+            currentFloor: '3层',
+            selectedRooms: ['A301', 'A302'],
+            taskInterval: null
+        };
+
+        // 房间基础数据源：动态生成，10 层 × 25 间
+        function buildRoomDB() {
+            const db = { 'A栋': {}, 'B栋': {} };
+            FLOOR_LIST.forEach(f => {
+                const n = parseInt(f, 10);
+                const arrA = [], arrB = [];
+                for (let i = 1; i <= ROOMS_PER_FLOOR; i++) {
+                    const suffix = String(i).padStart(2, '0');
+                    arrA.push('A' + n + suffix);
+                    arrB.push('B' + n + suffix);
+                }
+                db['A栋'][f] = arrA;
+                db['B栋'][f] = arrB;
+            });
+            return db;
+        }
+        const roomDatabase = buildRoomDB();
+
+        // 动态渲染楼层按钮
+        function renderFloorTabs() {
+            const c = document.getElementById('floor-tabs');
+            c.innerHTML = FLOOR_LIST.map(f => {
+                const on = f === state.currentFloor;
+                return `<button onclick="selectFloor('${f}')" data-floor="${f}" class="floor-btn py-2 rounded-xl text-xs font-bold border transition-all ${on ? 'bg-primary text-white border-primary shadow-sm' : 'bg-slate-100 text-slate-600 border-slate-200'}">${f}</button>`;
+            }).join('');
+        }
+
+        // 初始化渲染首页
+        function renderHome() {
+            document.getElementById('stat-total').innerText = state.statTotal;
+            document.getElementById('stat-doing').innerText = state.statDoing;
+            document.getElementById('stat-done').innerText = state.statDone;
+
+            const idleCard = document.getElementById('card-status-idle');
+            const workingCard = document.getElementById('card-status-working');
+            const idleAction = document.getElementById('section-action-idle');
+            const workingAction = document.getElementById('section-action-working');
+
+            if (state.isWorking) {
+                idleCard.classList.add('hidden');
+                workingCard.classList.remove('hidden');
+                idleAction.classList.add('hidden');
+                workingAction.classList.remove('hidden');
+
+                // 渲染做房中标签
+                renderWorkingTags();
+                startTaskSimulation();
+            } else {
+                idleCard.classList.remove('hidden');
+                workingCard.classList.add('hidden');
+                idleAction.classList.remove('hidden');
+                workingAction.classList.add('hidden');
+
+                stopTaskSimulation();
+            }
+        }
+
+        // 渲染做房中状态下的标签
+        function renderWorkingTags() {
+            const container = document.getElementById('working-tags-container');
+            document.getElementById('working-count-badge').innerText = `已选 ${state.selectedRooms.length} 间`;
+            
+            if (state.selectedRooms.length === 0) {
+                container.innerHTML = `<span class="text-xs text-slate-400 italic">暂未选择房间，请点击编辑调整</span>`;
+                return;
+            }
+
+            container.innerHTML = state.selectedRooms.map(room => `
+                <span class="bg-white text-primary border border-primary/20 text-xs px-2.5 py-1 rounded-[6px] font-semibold shadow-2xs">
+                    ${room}
+                </span>
+            `).join('');
+        }
+
+        // 页面跳转控制
+        function goToSelectRoom(mode) {
+            document.getElementById('page-home').classList.add('hidden');
+            document.getElementById('page-select').classList.remove('hidden');
+            
+            if (mode === 'edit') {
+                document.getElementById('select-page-title').innerText = '编辑调整房间范围';
+            } else {
+                document.getElementById('select-page-title').innerText = '选择做房房间范围';
+            }
+
+            renderRoomGrid();
+        }
+
+        function goBackHome() {
+            document.getElementById('page-select').classList.add('hidden');
+            document.getElementById('page-home').classList.remove('hidden');
+            renderHome();
+        }
+
+        // 楼栋与楼层切换逻辑
+        function selectBuilding(building) {
+            state.currentBuilding = building;
+            document.querySelectorAll('.building-btn').forEach(btn => {
+                if (btn.dataset.building === building) {
+                    btn.className = "building-btn flex-1 py-2.5 rounded-xl text-sm font-bold border transition-all bg-primary text-white border-primary shadow-sm";
+                } else {
+                    btn.className = "building-btn flex-1 py-2.5 rounded-xl text-sm font-bold border transition-all bg-slate-100 text-slate-600 border-slate-200";
+                }
+            });
+            renderRoomGrid();
+        }
+
+        function selectFloor(floor) {
+            state.currentFloor = floor;
+            renderFloorTabs();
+            renderRoomGrid();
+        }
+
+        // 渲染房间网格
+        function renderRoomGrid() {
+            const container = document.getElementById('room-grid-container');
+            const roomsInFloor = roomDatabase[state.currentBuilding][state.currentFloor] || [];
+            
+            document.getElementById('floor-total-hint').innerText = `当前楼层共 ${roomsInFloor.length} 间`;
+
+            container.innerHTML = `
+                <div class="mb-3 text-xs font-bold text-slate-400 uppercase tracking-wider">${state.currentBuilding} - ${state.currentFloor} 客房列表</div>
+                <div class="grid grid-cols-2 gap-3">
+                    ${roomsInFloor.map(room => {
+                        const isChecked = state.selectedRooms.includes(room);
+                        return `
+                            <div onclick="toggleRoomCheck('${room}')" class="bg-white border rounded-2xl p-4 flex items-center justify-between cursor-pointer transition-all ${isChecked ? 'border-primary bg-blue-50/30 shadow-sm' : 'border-slate-200 hover:border-slate-300'}">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm ${isChecked ? 'bg-primary text-white shadow-md shadow-primary/20' : 'bg-slate-100 text-slate-600'}">
+                                        ${room.replace(/^[A-B]/, '')}
+                                    </div>
+                                    <div>
+                                        <div class="font-bold text-slate-800 text-base">${room}</div>
+                                        <div class="text-[11px] text-slate-400 mt-0.5">${isChecked ? '已勾选做房' : '标准间/大床'}</div>
+                                    </div>
+                                </div>
+                                <input type="checkbox" ${isChecked ? 'checked' : ''} class="w-5 h-5 rounded text-primary focus:ring-primary border-slate-300 pointer-events-none">
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            `;
+
+            updateSelectCountAndState();
+        }
+
+        // 切换单间房勾选
+        function toggleRoomCheck(room) {
+            const index = state.selectedRooms.indexOf(room);
+            if (index > -1) {
+                state.selectedRooms.splice(index, 1);
+            } else {
+                state.selectedRooms.push(room);
+            }
+            renderRoomGrid();
+        }
+
+        // 当前楼层全选/取消全选
+        function toggleSelectAllFloor(checkbox) {
+            const roomsInFloor = roomDatabase[state.currentBuilding][state.currentFloor] || [];
+            if (checkbox.checked) {
+                roomsInFloor.forEach(room => {
+                    if (!state.selectedRooms.includes(room)) {
+                        state.selectedRooms.push(room);
+                    }
+                });
+            } else {
+                state.selectedRooms = state.selectedRooms.filter(r => !roomsInFloor.includes(r));
+            }
+            renderRoomGrid();
+        }
+
+        // 更新选择数量与按钮状态
+        function updateSelectCountAndState() {
+            const count = state.selectedRooms.length;
+            document.getElementById('selected-count-num').innerText = count;
+            
+            const btnPreview = document.getElementById('btn-goto-preview');
+            if (count > 0) {
+                btnPreview.removeAttribute('disabled');
+            } else {
+                btnPreview.setAttribute('disabled', 'true');
+            }
+
+            // 同步全选勾选框状态
+            const roomsInFloor = roomDatabase[state.currentBuilding][state.currentFloor] || [];
+            const allChecked = roomsInFloor.length > 0 && roomsInFloor.every(r => state.selectedRooms.includes(r));
+            document.getElementById('check-all-floor').checked = allChecked;
+        }
+
+        // 跳转到预览确认页
+        function goToPreview() {
+            document.getElementById('page-select').classList.add('hidden');
+            document.getElementById('page-preview').classList.remove('hidden');
+
+            document.getElementById('preview-building').innerText = state.currentBuilding;
+            document.getElementById('preview-floor').innerText = state.currentFloor;
+
+            const tagContainer = document.getElementById('preview-room-tags');
+            tagContainer.innerHTML = state.selectedRooms.map(room => `
+                <span class="bg-white text-primary border border-primary/20 text-xs px-3 py-1.5 rounded-[6px] font-bold shadow-2xs">
+                    ${room}
+                </span>
+            `).join('');
+        }
+
+        function goBackSelect() {
+            document.getElementById('page-preview').classList.add('hidden');
+            document.getElementById('page-select').classList.remove('hidden');
+        }
+
+        // 确认上线
+        function confirmOnline() {
+            state.isWorking = true;
+            document.getElementById('page-preview').classList.add('hidden');
+            document.getElementById('page-home').classList.remove('hidden');
+            renderHome();
+            showToast('✅ 成功上线，开始智能派单');
+        }
+
+        // 退出做房相关
+        function showExitModal() {
+            document.getElementById('modal-exit').classList.remove('hidden');
+        }
+        function closeExitModal() {
+            document.getElementById('modal-exit').classList.add('hidden');
+        }
+        function confirmExitWorking() {
+            state.isWorking = false;
+            closeExitModal();
+            renderHome();
+            showToast('已安全退出做房状态');
+        }
+
+        // 模拟实时工单推送
+        function startTaskSimulation() {
+            stopTaskSimulation();
+            // 每隔 15 秒模拟推送一个新工单通知
+            state.taskInterval = setInterval(() => {
+                if (!state.isWorking) return;
+                triggerRandomTask();
+            }, 14000);
+        }
+
+        function stopTaskSimulation() {
+            if (state.taskInterval) {
+                clearInterval(state.taskInterval);
+                state.taskInterval = null;
+            }
+        }
+
+        function triggerRandomTask() {
+            if (state.selectedRooms.length === 0) return;
+            const randomRoom = state.selectedRooms[Math.floor(Math.random() * state.selectedRooms.length)];
+            const taskTypes = [
+                { type: '退房清扫', icon: 'ph-broom', desc: '客人已退房，请尽快前往进行深度清洁保洁。', badge: 'bg-amber-100 text-amber-700' },
+                { type: '客品补给', icon: 'ph-package', desc: '客户需要添加矿泉水、洗漱用品及毛巾。', badge: 'bg-blue-100 text-blue-700' },
+                { type: '布草更换', icon: 'ph-Bed', desc: '住客申请更换床单被罩及枕套。', badge: 'bg-purple-100 text-purple-700' }
+            ];
+            const task = taskTypes[Math.floor(Math.random() * taskTypes.length)];
+
+            document.getElementById('task-type-text').innerText = task.type;
+            document.getElementById('task-room-title').innerText = `${randomRoom} 室`;
+            document.getElementById('task-desc-text').innerText = task.desc;
+            document.getElementById('task-icon').className = `ph-bold ${task.icon} text-3xl`;
+            
+            document.getElementById('modal-task').classList.remove('hidden');
+        }
+
+        function closeTaskModal() {
+            document.getElementById('modal-task').classList.add('hidden');
+        }
+
+        function handleTaskComplete() {
+            state.statDoing = Math.max(0, state.statDoing - 1);
+            state.statDone += 1;
+            closeTaskModal();
+            renderHome();
+            showToast('🎉 工单已处理完成，统计已实时更新');
+        }
+
+        // 通用 Toast 提示
+        function showToast(msg) {
+            const toast = document.getElementById('toast-message');
+            document.getElementById('toast-text').innerText = msg;
+            toast.classList.remove('opacity-0', '-translate-y-4');
+            toast.classList.add('opacity-100', 'translate-y-0');
+            setTimeout(() => {
+                toast.classList.remove('opacity-100', 'translate-y-0');
+                toast.classList.add('opacity-0', '-translate-y-4');
+            }, 3000);
+        }
+
+        // 初始化加载
+        window.onload = function() {
+            renderFloorTabs();
+            renderHome();
+        };
+    </script>
+</body>
+</html>
