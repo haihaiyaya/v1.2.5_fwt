@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>客房做房工单系统 - 移动端高保真原型</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -120,7 +120,17 @@
                             <span>已选接收房间范围</span>
                             <span id="working-count-badge" class="text-primary font-semibold">已选 0 间</span>
                         </div>
-                        <div id="working-tags-container" class="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto no-scrollbar">
+                        <!-- 我的负责房间搜索 -->
+                        <div class="relative mb-2">
+                            <div class="flex items-center bg-slate-100 rounded-lg px-2.5 py-1.5">
+                                <i class="ph-bold ph-magnifying-glass text-slate-400 mr-1.5 text-xs"></i>
+                                <input id="working-search" type="text" autocomplete="off"
+                                    placeholder="搜索我负责的房间号"
+                                    class="w-full bg-transparent outline-none text-base text-slate-700 placeholder-slate-400"
+                                    oninput="filterWorkingTags(this.value)">
+                            </div>
+                        </div>
+                        <div id="working-tags-container" class="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto no-scrollbar">
                             <!-- 标签动态渲染 -->
                         </div>
                     </div>
@@ -171,10 +181,32 @@
                 <div class="w-9"></div> <!-- 占位保持居中 -->
             </div>
 
-            <!-- 筛选控制区：楼栋与楼层切换 -->
-            <div class="bg-white px-4 py-3 border-b border-slate-100 space-y-3">
+            <!-- 筛选控制区：房间搜索 + 楼栋与楼层切换 -->
+            <div class="bg-white px-4 py-3 border-b border-slate-100 space-y-3 relative">
+                <!-- 房间搜索（步步提示 + 模糊匹配） -->
+                <div class="relative">
+                    <div class="flex items-center bg-slate-100 rounded-xl px-3 py-2.5">
+                        <i class="ph-bold ph-magnifying-glass text-slate-400 mr-2"></i>
+                        <input id="hk-search-input" type="text" autocomplete="off"
+                            placeholder="搜索房间号，如 B1205 / 1205 / 1201"
+                            class="flex-1 bg-transparent outline-none text-base text-slate-700 placeholder-slate-400"
+                            oninput="onHkSearch(this.value)" onfocus="onHkSearch(this.value)">
+                        <button id="hk-search-clear" onclick="clearHkSearch()" class="hidden text-slate-400 text-sm ml-2">清空</button>
+                    </div>
+                    <!-- 搜索建议下拉 -->
+                    <div id="hk-search-suggest" class="absolute left-0 right-0 top-full mt-1 bg-white border border-slate-200 rounded-xl shadow-xl z-40 max-h-60 overflow-y-auto hidden no-scrollbar">
+                        <!-- 动态渲染 -->
+                    </div>
+                </div>
+
                 <div>
-                    <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-2">选择楼栋</label>
+                    <div class="flex items-center justify-between mb-2">
+                        <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">选择楼栋</label>
+                        <button onclick="selectWholeBuilding()" class="flex items-center space-x-1 text-xs font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 px-2.5 py-1 rounded-lg transition-colors">
+                            <i class="ph-bold ph-buildings text-sm"></i>
+                            <span>全选楼栋(<span id="building-total-hint">0</span>)</span>
+                        </button>
+                    </div>
                     <div class="flex space-x-2" id="building-tabs">
                         <button onclick="selectBuilding('A栋')" data-building="A栋" class="building-btn flex-1 py-2.5 rounded-xl text-sm font-bold border transition-all bg-primary text-white border-primary shadow-sm">A 栋</button>
                         <button onclick="selectBuilding('B栋')" data-building="B栋" class="building-btn flex-1 py-2.5 rounded-xl text-sm font-bold border transition-all bg-slate-100 text-slate-600 border-slate-200">B 栋</button>
@@ -189,17 +221,19 @@
                 </div>
 
                 <!-- 全选工具栏 -->
-                <div class="flex items-center justify-between pt-2 border-t border-slate-100">
-                    <label class="flex items-center space-x-2.5 cursor-pointer">
-                        <input type="checkbox" id="check-all-floor" onchange="toggleSelectAllFloor(this)" class="w-5 h-5 rounded text-primary focus:ring-primary border-slate-300">
-                        <span class="text-sm font-semibold text-slate-700">全选当前楼层所有房间</span>
-                    </label>
-                    <span class="text-xs text-slate-400 font-medium" id="floor-total-hint">共 5 间客房</span>
+                <div class="pt-2 border-t border-slate-100">
+                    <div class="flex items-center justify-between">
+                        <label class="flex items-center space-x-2.5 cursor-pointer">
+                            <input type="checkbox" id="check-all-floor" onchange="toggleSelectAllFloor(this)" class="w-5 h-5 rounded text-primary focus:ring-primary border-slate-300">
+                            <span class="text-sm font-semibold text-slate-700">全选当前楼层所有房间</span>
+                        </label>
+                        <span class="text-xs text-slate-400 font-medium" id="floor-total-hint">共 25 间客房</span>
+                    </div>
                 </div>
             </div>
 
             <!-- 房间网格列表 -->
-            <div class="flex-1 overflow-y-auto p-4" id="room-grid-container">
+            <div class="flex-1 overflow-y-auto p-2" id="room-grid-container">
                 <!-- 动态渲染房间卡片 -->
             </div>
 
@@ -247,10 +281,18 @@
                         </div>
                         <div class="flex justify-between items-center text-sm">
                             <span class="text-slate-400 font-medium">当前楼层</span>
-                            <span class="font-bold text-slate-700 bg-slate-100 px-3 py-1 rounded-xl" id="preview-floor">3层</span>
+                            <span class="font-bold text-slate-700 bg-slate-100 px-3 py-1 rounded-xl" id="preview-floor">16层</span>
                         </div>
                         <div>
-                            <span class="text-slate-400 font-medium text-sm block mb-2">已选房间明细：</span>
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-slate-400 font-medium text-sm">已选房间明细：</span>
+                                <div class="flex items-center bg-slate-100 rounded-lg px-2.5 py-1.5 w-40">
+                                    <i class="ph-bold ph-magnifying-glass text-slate-400 mr-1.5 text-xs"></i>
+                                    <input id="preview-search" type="text" autocomplete="off" placeholder="搜索已选房间"
+                                        class="w-full bg-transparent outline-none text-base text-slate-700 placeholder-slate-400"
+                                        oninput="filterPreviewTags(this.value)">
+                                </div>
+                            </div>
                             <div id="preview-room-tags" class="flex flex-wrap gap-1.5 p-3.5 bg-slate-50 rounded-2xl border border-slate-100 max-h-48 overflow-y-auto">
                                 <!-- 标签渲染 -->
                             </div>
@@ -344,7 +386,7 @@
     <!-- JavaScript 核心业务逻辑 -->
     <script>
         // 数据模型
-        const FLOOR_LIST = ['3层','4层','5层','6层','7层','8层','9层','10层','11层','12层']; // 共 10 层
+        const FLOOR_LIST = ['16层','17层','18层','19层','20层','21层','22层','23层','24层','25层']; // 共 10 层
         const ROOMS_PER_FLOOR = 25; // 每层 25 间
         let state = {
             isWorking: false,
@@ -352,12 +394,13 @@
             statDoing: 4,
             statDone: 2,
             currentBuilding: 'A栋',
-            currentFloor: '3层',
-            selectedRooms: ['A301', 'A302'],
-            taskInterval: null
+            currentFloor: '16层',
+            selectedRooms: ['A1601', 'A1602'],
+            taskInterval: null,
+            highlightRoom: null  // 搜索定位后高亮
         };
 
-        // 房间基础数据源：动态生成，10 层 × 25 间
+        // 房间基础数据源：动态生成，14 层 × 25 间
         function buildRoomDB() {
             const db = { 'A栋': {}, 'B栋': {} };
             FLOOR_LIST.forEach(f => {
@@ -375,12 +418,34 @@
         }
         const roomDatabase = buildRoomDB();
 
-        // 动态渲染楼层按钮
+        // 全量房间扁平索引（用于模糊搜索）
+        const ALL_ROOMS = [];
+        Object.keys(roomDatabase).forEach(b => {
+            Object.keys(roomDatabase[b]).forEach(f => {
+                roomDatabase[b][f].forEach(r => ALL_ROOMS.push({ room: r, building: b, floor: f }));
+            });
+        });
+
+        // 动态渲染楼层按钮（按选中状态分色）
         function renderFloorTabs() {
             const c = document.getElementById('floor-tabs');
             c.innerHTML = FLOOR_LIST.map(f => {
-                const on = f === state.currentFloor;
-                return `<button onclick="selectFloor('${f}')" data-floor="${f}" class="floor-btn py-2 rounded-xl text-xs font-bold border transition-all ${on ? 'bg-primary text-white border-primary shadow-sm' : 'bg-slate-100 text-slate-600 border-slate-200'}">${f}</button>`;
+                const rooms = (roomDatabase[state.currentBuilding] && roomDatabase[state.currentBuilding][f]) || [];
+                const total = rooms.length;
+                const sel = rooms.filter(r => state.selectedRooms.includes(r)).length;
+                const isCurrent = f === state.currentFloor;
+                let cls;
+                if (sel === total && total > 0) {
+                    // 全选：绿色实心
+                    cls = 'py-2 rounded-xl text-xs font-bold border transition-all bg-emerald-500 text-white border-emerald-500 shadow-sm';
+                } else if (sel > 0) {
+                    // 部分选中：橘黄色实心
+                    cls = 'py-2 rounded-xl text-xs font-bold border transition-all bg-amber-400 text-white border-amber-400 shadow-sm';
+                } else {
+                    // 未选：默认灰；当前浏览楼层用浅蓝线框
+                    cls = 'py-2 rounded-xl text-xs font-bold border transition-all ' + (isCurrent ? 'bg-white text-primary border-primary border-2' : 'bg-slate-100 text-slate-600 border-slate-200');
+                }
+                return `<button onclick="selectFloor('${f}')" data-floor="${f}" class="${cls}">${f}</button>`;
             }).join('');
         }
 
@@ -418,17 +483,27 @@
         function renderWorkingTags() {
             const container = document.getElementById('working-tags-container');
             document.getElementById('working-count-badge').innerText = `已选 ${state.selectedRooms.length} 间`;
-            
+            const q = (document.getElementById('working-search')?.value || '').trim().toUpperCase();
+
             if (state.selectedRooms.length === 0) {
                 container.innerHTML = `<span class="text-xs text-slate-400 italic">暂未选择房间，请点击编辑调整</span>`;
                 return;
             }
 
-            container.innerHTML = state.selectedRooms.map(room => `
+            const list = q ? state.selectedRooms.filter(r => r.toUpperCase().includes(q)) : state.selectedRooms;
+            if (list.length === 0) {
+                container.innerHTML = `<span class="text-xs text-slate-400 italic">无匹配「${q}」的负责房间</span>`;
+                return;
+            }
+            container.innerHTML = list.map(room => `
                 <span class="bg-white text-primary border border-primary/20 text-xs px-2.5 py-1 rounded-[6px] font-semibold shadow-2xs">
                     ${room}
                 </span>
             `).join('');
+        }
+
+        function filterWorkingTags(q) {
+            renderWorkingTags();
         }
 
         // 页面跳转控制
@@ -470,6 +545,96 @@
             renderRoomGrid();
         }
 
+        // 当前楼栋总房间数
+        function buildingTotalRooms() {
+            return FLOOR_LIST.length * ROOMS_PER_FLOOR;
+        }
+        function refreshBuildingHint() {
+            document.getElementById('building-total-hint').textContent = buildingTotalRooms();
+        }
+
+        // 一键全选当前楼栋所有房间
+        function selectWholeBuilding() {
+            Object.keys(roomDatabase[state.currentBuilding]).forEach(f => {
+                roomDatabase[state.currentBuilding][f].forEach(r => {
+                    if (!state.selectedRooms.includes(r)) state.selectedRooms.push(r);
+                });
+            });
+            showToast(`已全选 ${state.currentBuilding} 共 ${buildingTotalRooms()} 间房`);
+            renderFloorTabs();
+            renderRoomGrid();
+        }
+
+        // ===== 房间搜索（步步提示 + 模糊定位） =====
+        let searchDebounce = null;
+        function onHkSearch(q) {
+            q = (q || '').trim().toUpperCase();
+            const clearBtn = document.getElementById('hk-search-clear');
+            const box = document.getElementById('hk-search-suggest');
+            clearBtn.classList.toggle('hidden', !q);
+            if (!q) { box.classList.add('hidden'); return; }
+
+            clearTimeout(searchDebounce);
+            searchDebounce = setTimeout(() => {
+                // 模糊匹配：B1205 / 1205 / 12 / B
+                const hits = ALL_ROOMS.filter(r => r.room.toUpperCase().includes(q)).slice(0, 12);
+                if (hits.length === 0) {
+                    box.innerHTML = `<div class="px-4 py-3 text-xs text-slate-400">未找到匹配「${q}」的房间</div>`;
+                } else {
+                    box.innerHTML = hits.map(h => `
+                        <div onclick="jumpToRoom('${h.room}')" class="px-4 py-2.5 hover:bg-slate-50 cursor-pointer flex items-center justify-between">
+                            <span class="font-bold text-slate-700 text-sm">${h.room}</span>
+                            <span class="text-[11px] text-slate-400">${h.building} · ${h.floor}</span>
+                        </div>
+                    `).join('');
+                }
+                box.classList.remove('hidden');
+            }, 120);
+        }
+
+        function clearHkSearch() {
+            document.getElementById('hk-search-input').value = '';
+            document.getElementById('hk-search-suggest').classList.add('hidden');
+            state.highlightRoom = null;
+        }
+
+        function jumpToRoom(room) {
+            const info = ALL_ROOMS.find(r => r.room === room);
+            if (!info) return;
+            // 切楼栋 / 楼层
+            if (state.currentBuilding !== info.building) {
+                state.currentBuilding = info.building;
+                document.querySelectorAll('.building-btn').forEach(btn => {
+                    if (btn.dataset.building === info.building) {
+                        btn.className = "building-btn flex-1 py-2.5 rounded-xl text-sm font-bold border transition-all bg-primary text-white border-primary shadow-sm";
+                    } else {
+                        btn.className = "building-btn flex-1 py-2.5 rounded-xl text-sm font-bold border transition-all bg-slate-100 text-slate-600 border-slate-200";
+                    }
+                });
+            }
+            state.currentFloor = info.floor;
+            state.highlightRoom = room;
+            renderFloorTabs();
+            renderRoomGrid();
+            // 关闭下拉、写入搜索框
+            document.getElementById('hk-search-input').value = room;
+            document.getElementById('hk-search-suggest').classList.add('hidden');
+            // 滚动到目标卡片
+            setTimeout(() => {
+                const el = document.getElementById('room-card-' + room);
+                if (el) el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+            }, 60);
+        }
+
+        // 点击页面其他区域收起搜索下拉
+        document.addEventListener('click', function(e) {
+            const box = document.getElementById('hk-search-suggest');
+            const input = document.getElementById('hk-search-input');
+            if (box && !box.contains(e.target) && e.target !== input) {
+                box.classList.add('hidden');
+            }
+        });
+
         // 渲染房间网格
         function renderRoomGrid() {
             const container = document.getElementById('room-grid-container');
@@ -479,18 +644,20 @@
 
             container.innerHTML = `
                 <div class="mb-3 text-xs font-bold text-slate-400 uppercase tracking-wider">${state.currentBuilding} - ${state.currentFloor} 客房列表</div>
-                <div class="grid grid-cols-2 gap-3">
+                <div class="grid grid-cols-2 gap-2">
                     ${roomsInFloor.map(room => {
                         const isChecked = state.selectedRooms.includes(room);
+                        const isFocus = state.highlightRoom === room;
+                        const extraCls = isFocus ? 'ring-4 ring-amber-300/80 border-amber-400' : '';
                         return `
-                            <div onclick="toggleRoomCheck('${room}')" class="bg-white border rounded-2xl p-4 flex items-center justify-between cursor-pointer transition-all ${isChecked ? 'border-primary bg-blue-50/30 shadow-sm' : 'border-slate-200 hover:border-slate-300'}">
+                            <div id="room-card-${room}" onclick="toggleRoomCheck('${room}')" class="bg-white border rounded-2xl p-4 flex items-center justify-between cursor-pointer transition-all ${isChecked ? 'border-primary bg-blue-50/30 shadow-sm' : 'border-slate-200 hover:border-slate-300'} ${extraCls}">
                                 <div class="flex items-center space-x-3">
                                     <div class="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm ${isChecked ? 'bg-primary text-white shadow-md shadow-primary/20' : 'bg-slate-100 text-slate-600'}">
                                         ${room.replace(/^[A-B]/, '')}
                                     </div>
                                     <div>
                                         <div class="font-bold text-slate-800 text-base">${room}</div>
-                                        <div class="text-[11px] text-slate-400 mt-0.5">${isChecked ? '已勾选做房' : '标准间/大床'}</div>
+                                        <div class="text-[11px] text-slate-400 mt-0.5">${isChecked ? '已勾选做房' : isFocus ? '已定位到该房间' : '标准间/大床'}</div>
                                     </div>
                                 </div>
                                 <input type="checkbox" ${isChecked ? 'checked' : ''} class="w-5 h-5 rounded text-primary focus:ring-primary border-slate-300 pointer-events-none">
@@ -511,6 +678,7 @@
             } else {
                 state.selectedRooms.push(room);
             }
+            renderFloorTabs();
             renderRoomGrid();
         }
 
@@ -526,6 +694,7 @@
             } else {
                 state.selectedRooms = state.selectedRooms.filter(r => !roomsInFloor.includes(r));
             }
+            renderFloorTabs();
             renderRoomGrid();
         }
 
@@ -554,13 +723,27 @@
 
             document.getElementById('preview-building').innerText = state.currentBuilding;
             document.getElementById('preview-floor').innerText = state.currentFloor;
+            document.getElementById('preview-search').value = '';
+            renderPreviewTags('');
+        }
 
+        function renderPreviewTags(q) {
             const tagContainer = document.getElementById('preview-room-tags');
-            tagContainer.innerHTML = state.selectedRooms.map(room => `
+            q = (q || '').trim().toUpperCase();
+            const list = q ? state.selectedRooms.filter(r => r.toUpperCase().includes(q)) : state.selectedRooms;
+            if (list.length === 0) {
+                tagContainer.innerHTML = `<span class="text-xs text-slate-400 italic px-1">${q ? '无匹配已选房间' : '暂未选择房间'}</span>`;
+                return;
+            }
+            tagContainer.innerHTML = list.map(room => `
                 <span class="bg-white text-primary border border-primary/20 text-xs px-3 py-1.5 rounded-[6px] font-bold shadow-2xs">
                     ${room}
                 </span>
             `).join('');
+        }
+
+        function filterPreviewTags(q) {
+            renderPreviewTags(q);
         }
 
         function goBackSelect() {
@@ -653,6 +836,7 @@
         // 初始化加载
         window.onload = function() {
             renderFloorTabs();
+            refreshBuildingHint();
             renderHome();
         };
     </script>
