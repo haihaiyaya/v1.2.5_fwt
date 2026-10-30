@@ -1418,6 +1418,47 @@ body {
   padding: 8px 10px; font-size: 13px; line-height: 1.6; color: var(--text); outline: none; resize: vertical; min-height: 72px; font-family: inherit; }
 .cd-summary-edit textarea:focus { border-color: var(--primary); }
 .cd-summary-edit-foot { display: flex; justify-content: flex-end; margin-top: 6px; }
+
+/* 更多通话明细：可折叠 */
+.cd-more-toggle { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px;
+  background: #f8fafc; border: 1px solid var(--border); border-radius: 8px; margin-top: 12px; cursor: pointer;
+  font-size: 13px; color: var(--text); }
+.cd-more-toggle:hover { background: #f1f5f9; }
+.cd-more-toggle .cd-more-left { display: flex; align-items: center; gap: 10px; }
+.cd-more-toggle .cd-more-summary { color: var(--text-secondary); font-size: 12px; }
+.cd-more-toggle .cd-more-btn { color: var(--primary); font-size: 12px; display: flex; align-items: center; gap: 4px; }
+.cd-more-toggle .cd-more-btn::after { content: '▾'; transition: transform .2s; }
+.cd-more.collapsed .cd-more-btn::after { transform: rotate(-90deg); }
+.cd-more-body { display: block; margin-top: 10px; }
+.cd-more.collapsed .cd-more-body { display: none; }
+
+/* 录音波形图 */
+.cd-wave { flex: 1; display: flex; align-items: center; gap: 2px; height: 36px; padding: 0 10px;
+  background: #f8fafc; border-radius: 6px; margin: 0 10px; cursor: pointer; position: relative; }
+.cd-wave-bar { flex: 1; background: #c7d2fe; border-radius: 1px; min-width: 2px; }
+.cd-wave-bar.done { background: var(--primary); }
+
+/* 转写记录 */
+.cd-transcript-tabs { display: flex; align-items: center; gap: 18px; border-bottom: 1px solid var(--border);
+  padding: 0 4px; margin: 16px 0 12px; }
+.cd-transcript-tab { padding: 8px 2px; font-size: 13px; color: var(--text-secondary); cursor: pointer;
+  border-bottom: 2px solid transparent; margin-bottom: -1px; }
+.cd-transcript-tab.active { color: var(--primary); border-bottom-color: var(--primary); font-weight: 600; }
+.cd-transcript-count { margin-left: auto; font-size: 12px; color: var(--text-muted); }
+.cd-transcript-list { display: flex; flex-direction: column; gap: 14px; padding: 4px; }
+.cd-tt-item { display: flex; gap: 10px; }
+.cd-tt-item.right { flex-direction: row-reverse; }
+.cd-tt-avatar { width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  color: #fff; font-size: 11px; flex-shrink: 0; font-weight: 600; }
+.cd-tt-avatar.ai { background: #3b82f6; }
+.cd-tt-avatar.human { background: #f59e0b; }
+.cd-tt-avatar.guest { background: #10b981; }
+.cd-tt-body { max-width: 78%; }
+.cd-tt-meta { font-size: 11px; color: var(--text-muted); margin-bottom: 4px; }
+.cd-tt-item.right .cd-tt-meta { text-align: right; }
+.cd-tt-bubble { background: #f1f5f9; border-radius: 8px; padding: 9px 12px; font-size: 13px; line-height: 1.6;
+  color: var(--text); }
+.cd-tt-item.right .cd-tt-bubble { background: #ecfdf5; }
 </style>
 </head>
 
@@ -6301,21 +6342,26 @@ function crDetailHtml(c, editable) {
       '<div class="cd-label-row"><span class="k">诉求分类</span><span class="v">' + lfEsc(c.category) + '</span></div>' +
       summaryHtml +
     '</div>' +
-    '<div class="cd-sec">' +
-      '<div class="cd-sec-head">' +
-        '<div class="cd-sec-title">更多通话明细</div>' +
-        '<span class="cd-summary-line">' + lfEsc(summaryLine) + '</span>' +
+    '<div class="cd-sec cd-more collapsed" id="cdMoreSec">' +
+      '<div class="cd-more-toggle" onclick="document.getElementById(\'cdMoreSec\').classList.toggle(\'collapsed\')">' +
+        '<div class="cd-more-left">' +
+          '<span class="cd-sec-title">更多通话明细</span>' +
+          '<span class="cd-more-summary">' + lfEsc(summaryLine) + '</span>' +
+        '</div>' +
+        '<span class="cd-more-btn">查看更多详情</span>' +
       '</div>' +
-      '<div class="cd-sub-title">客情与位置</div>' +
-      '<div class="cd-3grid">' +
-        item('姓名', guest) + item('房间号', roomTxt) + item('线路类型', line + '电话') +
-      '</div>' +
-      '<div class="cd-sub-title">接待方式与质检指标</div>' +
-      '<div class="cd-3grid">' +
-        item('接听方式', c.answer) + item('通话时长', c.duration) + item('排队结果', queueResult) +
-      '</div>' +
-      '<div class="cd-3grid">' +
-        item('呼叫业务', c.biz) + item('是否AI接听', isAi) + item('是否人工接听', isHuman) +
+      '<div class="cd-more-body">' +
+        '<div class="cd-sub-title">客情与位置</div>' +
+        '<div class="cd-3grid">' +
+          item('姓名', guest) + item('房间号', roomTxt) + item('线路类型', line + '电话') +
+        '</div>' +
+        '<div class="cd-sub-title">接待方式与质检指标</div>' +
+        '<div class="cd-3grid">' +
+          item('接听方式', c.answer) + item('通话时长', c.duration) + item('排队结果', queueResult) +
+        '</div>' +
+        '<div class="cd-3grid">' +
+          item('呼叫业务', c.biz) + item('是否AI接听', isAi) + item('是否人工接听', isHuman) +
+        '</div>' +
       '</div>' +
     '</div>' +
     '<div class="cd-sec">' +
@@ -6325,17 +6371,60 @@ function crDetailHtml(c, editable) {
       '</div>' +
       '<div class="cd-player">' +
         '<button class="cd-play-btn" id="crPlayBtn" onclick="crTogglePlay(this)">' + crPlaySvg + '</button>' +
-        '<div class="cd-progress" id="crProg" onclick="crSeek(event)"><div class="bar" id="crProgBar"></div></div>' +
+        '<div class="cd-wave" id="crWave" onclick="crSeek(event)">' +
+          (function(){ let h=''; for(let i=0;i<48;i++){ const p=Math.abs(Math.sin(i*0.9)*0.7+Math.sin(i*0.3)*0.3); h+='<div class="cd-wave-bar' + (i<8?' done':'') + '" style="height:' + Math.round(8+p*24) + 'px"></div>'; } return h; })() +
+        '</div>' +
         '<span class="cd-player-time" id="crPlayTime" data-total="' + totalSec + '">00:00 / ' + crFmtSec(totalSec) + '</span>' +
         '<button class="cd-rate" data-rate="1" onclick="crCycleRate(this)">1.0x</button>' +
       '</div>' +
-    '</div>'
+    '</div>' +
+    (function(){
+      const tr = c.transcript || [];
+      if (!tr.length) return '';
+      const aiCount = tr.filter(x => x.who === 'ai').length;
+      const huCount = tr.filter(x => x.who === 'human').length;
+      const total = tr.length;
+      const tab = (key, label) => '<div class="cd-transcript-tab' + (key==='all'?' active':'') + '" data-trtab="' + key + '" onclick="crSwitchTrTab(this)">' + label + '</div>';
+      const bubble = (x) => {
+        const isGuest = x.who === 'guest';
+        const avatarCls = isGuest ? 'guest' : (x.who === 'human' ? 'human' : 'ai');
+        const avatarTxt = isGuest ? '客' : (x.who === 'human' ? '客' : 'AI');
+        const name = isGuest ? '客人（主叫）' : (x.who === 'human' ? '前台坐席' : '智能语音助手');
+        return '<div class="cd-tt-item' + (isGuest ? ' right' : '') + '" data-trwho="' + x.who + '">' +
+          '<div class="cd-tt-avatar ' + avatarCls + '">' + avatarTxt + '</div>' +
+          '<div class="cd-tt-body">' +
+            '<div class="cd-tt-meta">' + name + ' · ' + x.time + '</div>' +
+            '<div class="cd-tt-bubble">' + lfEsc(x.text) + '</div>' +
+          '</div>' +
+        '</div>';
+      };
+      return '<div class="cd-sec">' +
+        '<div class="cd-transcript-tabs">' +
+          tab('all', '全部记录') +
+          tab('ai', 'AI智能接待') +
+          tab('human', '人工转接段') +
+          '<span class="cd-transcript-count">共 ' + total + ' 轮交互</span>' +
+        '</div>' +
+        '<div class="cd-transcript-list">' + tr.map(bubble).join('') + '</div>' +
+      '</div>';
+    })()
   );
 }
 
-// 录音播放器（原型演示）
+// 转写记录标签切换
+function crSwitchTrTab(el) {
+  const tab = el.dataset.trtab;
+  document.querySelectorAll('.cd-transcript-tab').forEach(t => t.classList.toggle('active', t === el));
+  document.querySelectorAll('.cd-tt-item').forEach(item => {
+    if (tab === 'all') { item.style.display = ''; }
+    else if (tab === 'ai') { item.style.display = (item.dataset.trwho === 'ai') ? '' : 'none'; }
+    else if (tab === 'human') { item.style.display = (item.dataset.trwho === 'human' || item.dataset.trwho === 'guest') ? '' : 'none'; }
+  });
+}
+
+// 录音播放器（原型演示，波形模式）
 function crTogglePlay(btn) {
-  const bar = document.getElementById('crProgBar');
+  const wave = document.getElementById('crWave');
   const timeEl = document.getElementById('crPlayTime');
   const totalSec = parseInt(timeEl.dataset.total || '0', 10);
   if (crPlayTimer) {
@@ -6345,24 +6434,30 @@ function crTogglePlay(btn) {
     return;
   }
   const rate = parseFloat(btn.parentElement.querySelector('.cd-rate').dataset.rate || '1');
+  const bars = wave.querySelectorAll('.cd-wave-bar');
+  const totalBars = bars.length;
+  let curIdx = 0;
+  bars.forEach((b, i) => { if (b.classList.contains('done')) curIdx = i + 1; });
   crPlayTimer = setInterval(() => {
-    let cur = parseFloat(bar.style.width) || 0;
-    cur += 0.5 * rate;
-    if (cur >= 100) { cur = 100; clearInterval(crPlayTimer); crPlayTimer = null; btn.innerHTML = crPlaySvg; }
-    bar.style.width = cur + '%';
-    timeEl.textContent = crFmtSec(Math.round(cur / 100 * totalSec)) + ' / ' + crFmtSec(totalSec);
-  }, 200);
+    curIdx += 0.3 * rate;
+    const done = Math.floor(curIdx);
+    bars.forEach((b, i) => b.classList.toggle('done', i < done));
+    const pct = Math.min(1, curIdx / totalBars);
+    timeEl.textContent = crFmtSec(Math.round(pct * totalSec)) + ' / ' + crFmtSec(totalSec);
+    if (curIdx >= totalBars) { curIdx = totalBars; clearInterval(crPlayTimer); crPlayTimer = null; btn.innerHTML = crPlaySvg; }
+  }, 120);
   btn.innerHTML = crPauseSvg;
   showToast('原型演示：正在播放模拟录音');
 }
 
 function crSeek(ev) {
-  const prog = document.getElementById('crProg');
-  const rect = prog.getBoundingClientRect();
-  const pct = Math.max(0, Math.min(100, (ev.clientX - rect.left) / rect.width * 100));
-  document.getElementById('crProgBar').style.width = pct + '%';
+  const wave = document.getElementById('crWave');
+  const rect = wave.getBoundingClientRect();
+  const pct = Math.max(0, Math.min(1, (ev.clientX - rect.left) / rect.width));
+  const bars = wave.querySelectorAll('.cd-wave-bar');
+  bars.forEach((b, i) => b.classList.toggle('done', i / bars.length < pct));
   const total = parseInt(document.getElementById('crPlayTime').dataset.total || '0', 10);
-  document.getElementById('crPlayTime').textContent = crFmtSec(Math.round(pct / 100 * total)) + ' / ' + crFmtSec(total);
+  document.getElementById('crPlayTime').textContent = crFmtSec(Math.round(pct * total)) + ' / ' + crFmtSec(total);
 }
 
 function crCycleRate(btn) {
@@ -6424,7 +6519,15 @@ const LC_CALL_MOCK = {
   id: 99, date: '', time: '', category: '客需类', summary: '客房服务', emotion: 'normal',
   room: '7406', order: '有客需单', caller: '130****1234', callee: '8188', status: '被叫挂机',
   answer: '人工接听', duration: '2分钟10秒', biz: '外线客服托管',
-  detail: '客人要求尽快打扫房间，并配送矿泉水 2 瓶、拖鞋 1 双至房间。'
+  detail: '客人要求尽快打扫房间，并配送矿泉水 2 瓶、拖鞋 1 双至房间。',
+  transcript: [
+    { who: 'ai', time: '11:23:08', text: '您好！中远宾馆前台小助手为您服务，请问有什么可以帮您？' },
+    { who: 'guest', time: '11:23:15', text: '你好，我住 7406 房间，麻烦尽快过来打扫一下，另外送两瓶矿泉水和一双拖鞋上来。' },
+    { who: 'ai', time: '11:23:22', text: '好的，正在为您转接客房服务坐席，请稍候。' },
+    { who: 'human', time: '11:23:30', text: '您好，这里是客房服务张亮亮，已经收到您的需求，马上安排清扫组上门，并配送矿泉水 2 瓶、拖鞋 1 双到 7406 房间，预计 15 分钟内到达。' },
+    { who: 'guest', time: '11:23:40', text: '好的，谢谢。' },
+    { who: 'human', time: '11:23:42', text: '不客气，祝您入住愉快。' }
+  ]
 };
 // 房间 → 排班人员映射（任务负责人默认取当前房间排班人员）
 const LC_SHIFT_MAP = {
@@ -6688,7 +6791,15 @@ const LC_CONSULT_MOCK = {
   id: 88, date: '', time: '', category: '咨询类', summary: '酒店位置与房价咨询', emotion: 'normal',
   room: '', order: '无客需单', caller: '139****6688', callee: '8188', status: '主叫挂机',
   answer: '人工接听', duration: '1分45秒', biz: '外线客服托管',
-  detail: '客人来电咨询酒店具体位置（福州市鼓楼区五一北路88号，毗邻三坊七巷）、标准间当前房价（平日468元/晚）及未来三天空房情况；已告知相关信息，客人表示考虑后再联系预订。'
+  detail: '客人来电咨询酒店具体位置（福州市鼓楼区五一北路88号，毗邻三坊七巷）、标准间当前房价（平日468元/晚）及未来三天空房情况；已告知相关信息，客人表示考虑后再联系预订。',
+  transcript: [
+    { who: 'ai', time: '16:20:05', text: '您好！中远宾馆前台小助手为您服务，请问有什么可以帮您？' },
+    { who: 'guest', time: '16:20:12', text: '你好，我想咨询一下酒店的具体位置，还有标准间现在房价多少？最近还有空房吗？' },
+    { who: 'ai', time: '16:20:20', text: '好的，为您解答：我们酒店位于福州市鼓楼区五一北路 88 号，毗邻三坊七巷景区，步行约 10 分钟；标准间平日房价 468 元/晚，目前未来三天各有少量空房可预订。' },
+    { who: 'human', time: '16:20:45', text: '您好，这里是前台坐席李娟，关于预订您还有其他疑问吗？需要帮您预留房间吗？' },
+    { who: 'guest', time: '16:21:00', text: '好的明白了，我考虑一下再联系你们。' },
+    { who: 'human', time: '16:21:05', text: '好的，感谢来电，如有需要欢迎随时拨打前台电话，再见。' }
+  ]
 };
 let lcEditingMock = null;
 let cdSummaryDirty = false;
