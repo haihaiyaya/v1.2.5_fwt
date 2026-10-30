@@ -1058,6 +1058,23 @@ body {
 .kb-icon-btn.del:hover { color: var(--hangup); }
 .kb-grid-empty { grid-column: 1 / -1; text-align: center; color: var(--text-muted); padding: 70px 0; font-size: 13px; }
 
+/* 卡片内相似问法 chips */
+.kb-syns { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 2px; }
+.kb-syns-label { font-size: 11px; color: var(--text-muted); margin-right: 2px; }
+.kb-syn-chip { font-size: 11px; color: var(--primary); background: var(--primary-light); border-radius: 10px;
+  padding: 2px 8px; line-height: 1.5; }
+.kb-syn-more { font-size: 11px; color: var(--text-muted); padding: 2px 4px; cursor: pointer; }
+
+/* 编辑抽屉：动态问法行 */
+.kb-syn-list { display: flex; flex-direction: column; gap: 8px; }
+.kb-syn-row { display: flex; gap: 8px; align-items: center; }
+.kb-syn-row input { flex: 1; border: 1px solid var(--border); border-radius: 6px; padding: 7px 10px; font-size: 13px; outline: none; }
+.kb-syn-row input:focus { border-color: var(--primary); }
+.kb-syn-row-del { background: none; border: none; color: var(--hangup); cursor: pointer; font-size: 12px; padding: 4px 6px; flex-shrink: 0; }
+.kb-syn-add { background: none; border: 1px dashed var(--border); border-radius: 6px; color: var(--primary);
+  padding: 7px 10px; font-size: 12px; cursor: pointer; margin-top: 4px; }
+.kb-syn-add:hover { border-color: var(--primary); background: var(--primary-light); }
+
 /* 知识库编辑抽屉 */
 .kb-overlay { position: fixed; inset: 0; z-index: 1400; background: rgba(0,0,0,.35); }
 .kb-drawer { position: absolute; top: 0; right: 0; bottom: 0; width: 520px; max-width: 94vw; background: #fff;
@@ -2611,12 +2628,17 @@ body {
     </div>
     <div class="kb-drawer-body">
       <div class="lf-form-row kb-field">
-        <label>知识库标题</label>
-        <input type="text" id="kbEditQuestion" placeholder="请输入问题 / 知识库标题">
+        <label>知识库标题（主问题）</label>
+        <input type="text" id="kbEditQuestion" placeholder="请输入主问题 / 知识库标题">
       </div>
       <div class="lf-form-row kb-field">
-        <label>知识库内容</label>
-        <textarea id="kbEditAnswer" placeholder="请输入知识库内容（回答）" style="min-height:220px;"></textarea>
+        <label>相似问法 <span style="font-weight:400;color:var(--text-muted);font-size:12px;">（同一答案可匹配多种问法，最多 10 条）</span></label>
+        <div class="kb-syn-list" id="kbSynList"></div>
+        <button class="kb-syn-add" onclick="kbAddSynRow()">＋ 添加问法</button>
+      </div>
+      <div class="lf-form-row kb-field">
+        <label>知识库内容（答案）</label>
+        <textarea id="kbEditAnswer" placeholder="请输入知识库内容（回答）" style="min-height:180px;"></textarea>
       </div>
     </div>
     <div class="kb-drawer-foot">
@@ -5577,12 +5599,23 @@ function kbSeed() {
     { q: '客房隔音效果怎么样？房间会不会听到走廊噪音？', a: '客房采用双层隔音玻璃与实心墙体，关闭门窗后走廊噪音基本听不到，请放心入住。', t: '2026-07-28 10:12:00' },
     { q: '酒店提供接送机吗？有没有接机送机服务？', a: '酒店提供付费接送机服务，可提前联系前台预约，具体费用与时段以确认为准。', t: '2026-07-28 10:15:30' },
     { q: '酒店能提供叫醒服务吗？可以预约早上叫醒吗？', a: '可以的，您可通过客房电话或联系前台预约叫醒服务，该服务免费。', t: '2026-07-28 10:18:10' }
-  ].map((x, i) => ({ id: 100 + i, q: x.q, a: x.a, updatedAt: x.t }));
+  ].map((x, i) => ({ id: 100 + i, q: x.q, a: x.a, updatedAt: x.t, syns: [] }));
+  // 为演示多问法效果，给几条常见问题补充相似问法
+  const synMap = {
+    100: ['几点关门', '前台下班时间', '大堂还开吗'],
+    102: ['早餐有什么', '自助餐菜品', '早上吃什么'],
+    105: ['早餐在几楼', '早餐厅位置', '去哪吃早饭'],
+    106: ['停车场充电', '能不能充电', '电车能充吗'],
+    110: ['几点可以入住', '最早几点办入住', '提前到能入住吗'],
+    112: ['儿童早餐收费吗', '小孩早餐要钱吗', '宝宝早餐免费吗'],
+    113: ['单人早餐多少钱', '早餐价目', '早餐怎么卖'],
+  };
+  test.forEach(x => { if (synMap[x.id]) x.syns = synMap[x.id]; });
   const room = [
-    { q: '客人借用物品如何登记？', a: '在「借物管理」中点击新建借物登记，选择房间号并通过下拉搜索选择租借物品，核对借用住客与备注后确认借出。', t: '2026-10-21 09:10:00' },
-    { q: '发现客人遗留物品如何处理？', a: '在「遗留查找」中录入房间号、物品名称、备注与实物照片，状态默认待认领；客人认领时填写领取信息后核销为已认领。', t: '2026-10-21 09:20:00' },
-    { q: '赶房任务如何创建？', a: '在「任务中心」点击新建任务，任务类型选择清扫服务、子类型选择赶房，填写房间号、任务内容与负责人后保存。', t: '2026-10-21 09:30:00' }
-  ].map((x, i) => ({ id: 200 + i, q: x.q, a: x.a, updatedAt: x.t }));
+    { q: '客人借用物品如何登记？', a: '在「借物管理」中点击新建借物登记，选择房间号并通过下拉搜索选择租借物品，核对借用住客与备注后确认借出。', t: '2026-10-21 09:10:00', syns: ['借东西怎么登记', '怎么借物品'] },
+    { q: '发现客人遗留物品如何处理？', a: '在「遗留查找」中录入房间号、物品名称、备注与实物照片，状态默认待认领；客人认领时填写领取信息后核销为已认领。', t: '2026-10-21 09:20:00', syns: ['客人落下东西怎么办', '捡到物品怎么登记'] },
+    { q: '赶房任务如何创建？', a: '在「任务中心」点击新建任务，任务类型选择清扫服务、子类型选择赶房，填写房间号、任务内容与负责人后保存。', t: '2026-10-21 09:30:00', syns: ['加急打扫', '房间要赶紧清扫'] }
+  ];
   return {
     text: [
       { id: 1, name: '测试', items: test },
@@ -5791,7 +5824,7 @@ function kbRender() {
   nameEl.textContent = cat.name;
   let items = cat.items;
   if (kw) {
-    items = items.filter(x => x.q.includes(kw) || x.a.includes(kw));
+    items = items.filter(x => x.q.includes(kw) || x.a.includes(kw) || (x.syns || []).some(s => s.includes(kw)));
   }
   if (!items.length) {
     grid.innerHTML = '<div class="kb-grid-empty">' + (kw ? '未找到包含「' + lfEsc(kw) + '」的问题' : '该分类暂无知识内容，点击右上角「新增」添加') + '</div>';
@@ -5799,19 +5832,77 @@ function kbRender() {
   }
   const editIcon = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4z"/></svg>';
   const delIcon = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>';
-  grid.innerHTML = items.map(x =>
-    '<div class="kb-card">' +
+  grid.innerHTML = items.map(x => {
+    const syns = x.syns || [];
+    let synsHtml = '';
+    if (syns.length) {
+      const shown = syns.slice(0, 3);
+      const more = syns.length - shown.length;
+      synsHtml = '<div class="kb-syns">' +
+        '<span class="kb-syns-label">其他问法：</span>' +
+        shown.map(s => '<span class="kb-syn-chip">' + lfEsc(s) + '</span>').join('') +
+        (more > 0 ? '<span class="kb-syn-more" title="' + lfEsc(syns.slice(3).join('、')) + '">+' + more + '</span>' : '') +
+      '</div>';
+    }
+    return '<div class="kb-card">' +
       '<div class="kb-q">' + lfEsc(x.q) + '</div>' +
+      synsHtml +
       '<div class="kb-a">' + lfEsc(x.a) + '</div>' +
       '<div class="kb-card-foot"><span>更新于：' + lfEsc(x.updatedAt) + '</span>' +
         '<span class="kb-card-ops">' +
           '<button class="kb-icon-btn" title="编辑" onclick="kbOpenEdit(' + x.id + ')">' + editIcon + '</button>' +
           '<button class="kb-icon-btn del" title="删除" onclick="kbAskDelete(' + x.id + ')">' + delIcon + '</button>' +
         '</span></div>' +
-    '</div>').join('');
+    '</div>';
+  }).join('');
 }
 
 // ===== 新增 / 编辑 =====
+function kbRenderSynRows(syns) {
+  const box = document.getElementById('kbSynList');
+  box.innerHTML = (syns || []).map((s, i) =>
+    '<div class="kb-syn-row">' +
+      '<input type="text" value="' + lfEsc(s) + '" placeholder="例如：几点关门？" oninput="kbSyncSynVal(' + i + ',this.value)">' +
+      '<button type="button" class="kb-syn-row-del" onclick="kbDelSynRow(' + i + ')" title="删除该问法">删除</button>' +
+    '</div>').join('');
+}
+
+function kbAddSynRow() {
+  const box = document.getElementById('kbSynList');
+  const cur = box.querySelectorAll('.kb-syn-row').length;
+  if (cur >= 10) { showToast('最多添加 10 条相似问法'); return; }
+  const row = document.createElement('div');
+  row.className = 'kb-syn-row';
+  row.innerHTML = '<input type="text" placeholder="请输入相似问法" oninput="kbSyncSynVal(' + cur + ',this.value)">' +
+    '<button type="button" class="kb-syn-row-del" onclick="kbDelSynRow(' + cur + ')" title="删除该问法">删除</button>';
+  box.appendChild(row);
+}
+
+function kbSyncSynVal(idx, val) {
+  const rows = document.querySelectorAll('#kbSynList .kb-syn-row');
+  if (rows[idx]) {
+    const inp = rows[idx].querySelector('input');
+    if (inp) inp._v = val;
+  }
+}
+
+function kbDelSynRow(idx) {
+  const rows = document.querySelectorAll('#kbSynList .kb-syn-row');
+  if (rows[idx]) rows[idx].remove();
+  // 重新绑定索引
+  document.querySelectorAll('#kbSynList .kb-syn-row').forEach((r, i) => {
+    const inp = r.querySelector('input');
+    const del = r.querySelector('.kb-syn-row-del');
+    if (inp) { inp.setAttribute('oninput', 'kbSyncSynVal(' + i + ',this.value)'); inp._v = inp.value; }
+    if (del) del.setAttribute('onclick', 'kbDelSynRow(' + i + ')');
+  });
+}
+
+function kbCollectSyns() {
+  return Array.prototype.map.call(document.querySelectorAll('#kbSynList .kb-syn-row input'),
+    inp => (inp.value || '').trim()).filter(Boolean);
+}
+
 function kbOpenEdit(id) {
   if (kbState.curGroup !== 'text') { showToast('语音知识库暂未开放，请先选择文本知识库分类'); return; }
   const cat = kbCurCat();
@@ -5822,12 +5913,14 @@ function kbOpenEdit(id) {
   if (id == null) {
     document.getElementById('kbDrawerTitle').textContent = '新增文本知识库';
     qInput.value = ''; aInput.value = '';
+    kbRenderSynRows([]);
   } else {
     const item = cat.items.find(x => x.id === id);
     if (!item) return;
     document.getElementById('kbDrawerTitle').textContent = '编辑文本知识库';
     qInput.value = item.q;
     aInput.value = item.a;
+    kbRenderSynRows(item.syns || []);
   }
   document.getElementById('kbEditOverlay').style.display = 'block';
 }
@@ -5842,15 +5935,16 @@ function kbConfirmEdit() {
   if (!cat) { kbCloseEdit(); return; }
   const q = document.getElementById('kbEditQuestion').value.trim();
   const a = document.getElementById('kbEditAnswer').value.trim();
-  if (!q) { showToast('请输入知识库标题（问题）'); return; }
+  const syns = kbCollectSyns();
+  if (!q) { showToast('请输入知识库标题（主问题）'); return; }
   if (!a) { showToast('请输入知识库内容'); return; }
   if (kbState.editId == null) {
     const nextId = kbState.data.text.reduce((m, c) => Math.max(m, c.items.reduce((mm, x) => Math.max(mm, x.id), 0)), 0) + 1;
-    cat.items.unshift({ id: nextId, q: q, a: a, updatedAt: kbNow() });
+    cat.items.unshift({ id: nextId, q: q, a: a, syns: syns, updatedAt: kbNow() });
     showToast('已新增知识：' + q);
   } else {
     const item = cat.items.find(x => x.id === kbState.editId);
-    if (item) { item.q = q; item.a = a; item.updatedAt = kbNow(); }
+    if (item) { item.q = q; item.a = a; item.syns = syns; item.updatedAt = kbNow(); }
     showToast('已保存修改');
   }
   kbCloseEdit();
