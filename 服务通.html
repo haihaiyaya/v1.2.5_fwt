@@ -1067,6 +1067,75 @@ body {
 .kb-drawer-body { flex: 1; padding: 20px; overflow-y: auto; }
 .kb-field { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
 .kb-field > label { font-size: 13px; color: var(--text); }
+
+/* AI 知识库三页签 */
+.kb-tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); margin-bottom: 14px; flex-shrink: 0; }
+.kb-tab { background: none; border: none; padding: 9px 18px; font-size: 14px; color: var(--text-secondary);
+  cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+.kb-tab.active { color: var(--primary); border-bottom-color: var(--primary); font-weight: 600; }
+.kb-pane { flex: 1; display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
+
+/* 基础信息 */
+.kb-base-card { background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 22px 26px;
+  width: 100%; max-width: 900px; }
+.kb-base-title { font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 18px; }
+.kb-base-row { display: flex; align-items: flex-start; gap: 16px; margin-bottom: 16px; }
+.kb-base-label { width: 90px; font-size: 13px; color: var(--text); padding-top: 8px; flex-shrink: 0; text-align: right; }
+.kb-base-input { flex: 1; border: 1px solid var(--border); border-radius: 6px; padding: 8px 12px; font-size: 13px; outline: none; }
+.kb-base-input:focus { border-color: var(--primary); }
+.kb-avatar-row { display: flex; align-items: center; gap: 10px; }
+.kb-avatar-preview { width: 56px; height: 56px; border-radius: 50%; background: linear-gradient(135deg,#a855f7,#c084fc);
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.kb-avatar-add { width: 56px; height: 56px; border: 1px dashed var(--border); border-radius: 6px; background: #fff;
+  color: var(--text-muted); font-size: 22px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.kb-avatar-add:hover { border-color: var(--primary); color: var(--primary); }
+.kb-avatar-del { background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 4px; display: flex; }
+.kb-avatar-del:hover { color: var(--hangup); }
+.kb-base-note { font-size: 12px; color: var(--text-muted); margin: 6px 0 18px 106px; }
+.kb-base-foot { display: flex; justify-content: flex-end; margin-top: 8px; }
+
+/* 问题列表 */
+.kb-qa-toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-shrink: 0; }
+.kb-qa-left { display: flex; align-items: center; gap: 10px; }
+.kb-qa-label { font-size: 13px; color: var(--text); }
+.kb-qa-left select { padding: 7px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px;
+  min-width: 180px; background: #fff; color: var(--text-secondary); outline: none; }
+.kb-qa-table-wrap { background: #fff; border: 1px solid var(--border); border-radius: 10px; overflow: auto; flex: 1; }
+.kb-qa-table { width: 100%; border-collapse: collapse; }
+.kb-qa-table th { background: #f8fafc; font-size: 13px; font-weight: 600; color: var(--text); padding: 11px 14px;
+  text-align: center; border-bottom: 1px solid var(--border); }
+.kb-qa-table td { font-size: 13px; color: var(--text); padding: 11px 14px; text-align: center;
+  border-bottom: 1px solid #f1f5f9; }
+.kb-qa-table tr:hover td { background: #f8fafc; }
+.kb-qa-icon { width: 36px; height: 36px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center;
+  color: #fff; }
+.kb-qa-op-edit { color: var(--primary); cursor: pointer; margin-right: 12px; }
+.kb-qa-op-del { color: var(--hangup); cursor: pointer; }
+.kb-qa-pager { display: flex; justify-content: flex-end; align-items: center; gap: 8px; padding: 12px 4px 0;
+  font-size: 12px; color: var(--text-secondary); flex-shrink: 0; }
+.kb-qa-pager button { border: 1px solid var(--border); background: #fff; border-radius: 4px; padding: 3px 9px;
+  font-size: 12px; cursor: pointer; color: var(--text-secondary); }
+.kb-qa-pager button:disabled { opacity: .5; cursor: not-allowed; }
+.kb-qa-pager .cur { background: var(--primary); color: #fff; border-color: var(--primary); }
+
+/* 问题编辑抽屉 */
+.kb-qa-edit-drawer { position: absolute; top: 0; right: 0; bottom: 0; width: 480px; max-width: 94vw; background: #fff;
+  box-shadow: -8px 0 30px rgba(0,0,0,.15); display: flex; flex-direction: column; }
+.kb-qa-edit-head { padding: 16px 22px; border-bottom: 1px solid var(--border); font-size: 15px; font-weight: 600;
+  display: flex; justify-content: space-between; align-items: center; }
+.kb-qa-edit-body { flex: 1; padding: 22px; overflow-y: auto; }
+.kb-qa-edit-row { margin-bottom: 18px; }
+.kb-qa-edit-row > label { display: block; font-size: 13px; color: var(--text); margin-bottom: 7px; }
+.kb-qa-edit-row > input[type="text"], .kb-qa-edit-row > select { width: 100%; box-sizing: border-box;
+  border: 1px solid var(--border); border-radius: 6px; padding: 8px 12px; font-size: 13px; outline: none; }
+.kb-qa-edit-row > input:focus, .kb-qa-edit-row > select:focus { border-color: var(--primary); }
+.kb-sort-row { display: flex; align-items: center; gap: 8px; }
+.kb-sort-row input[type="number"] { width: 70px; text-align: center; border: 1px solid var(--border);
+  border-radius: 6px; padding: 7px 0; font-size: 13px; outline: none; }
+.kb-sort-btn { border: 1px solid var(--border); background: #fff; border-radius: 6px; width: 28px; height: 30px;
+  cursor: pointer; font-size: 14px; color: var(--text-secondary); }
+.kb-sort-btn:hover { border-color: var(--primary); color: var(--primary); }
+.kb-qa-edit-foot { display: flex; justify-content: flex-end; gap: 10px; padding: 14px 22px; border-top: 1px solid var(--border); }
 .kb-field input, .kb-field textarea { width: 100%; border: 1px solid var(--border); border-radius: 6px; padding: 9px 11px;
   font-size: 13px; box-sizing: border-box; outline: none; font-family: inherit; color: var(--text); }
 .kb-field input:focus, .kb-field textarea:focus { border-color: var(--primary); }
@@ -1327,6 +1396,28 @@ body {
 .lc-call-detail-head { display: flex; align-items: center; justify-content: space-between;
   padding: 13px 18px; border-bottom: 1px solid var(--border); font-size: 14px; font-weight: 700; color: var(--text); }
 .lc-call-detail-body { flex: 1; overflow-y: auto; padding: 14px 18px; }
+
+/* 咨询通话详情抽屉（右侧贴靠，独立打开） */
+.lc-consult-overlay { position: fixed; inset: 0; z-index: 1600; background: rgba(15, 23, 42, .35); }
+.lc-consult-drawer { position: absolute; top: 0; right: 0; bottom: 0; width: 640px; max-width: 94vw;
+  background: #fff; display: flex; flex-direction: column; box-shadow: -12px 0 40px rgba(0,0,0,.18); animation: lcDrawerIn .28s ease; }
+.lc-consult-head { display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  padding: 14px 18px; border-bottom: 1px solid var(--border); }
+.lc-consult-title { font-size: 15px; font-weight: 700; color: var(--text); }
+.lc-consult-title .lc-order-ai { margin-left: 8px; font-weight: 500; font-size: 12px; }
+.lc-consult-body { flex: 1; overflow-y: auto; padding: 14px 18px; }
+.lc-consult-foot { display: flex; justify-content: flex-end; gap: 10px; padding: 12px 18px; border-top: 1px solid var(--border); }
+
+/* 内容概要可编辑区（AI 分析结果，重点突出） */
+.cd-summary-edit { margin-top: 8px; border: 1.5px solid var(--primary-light); background: #f8fbff;
+  border-radius: 8px; padding: 10px 12px; }
+.cd-summary-edit-label { font-size: 12px; color: var(--primary); font-weight: 600; margin-bottom: 6px;
+  display: flex; align-items: center; gap: 6px; }
+.cd-summary-edit-label::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--primary); }
+.cd-summary-edit textarea { width: 100%; box-sizing: border-box; border: 1px solid #d6e4ff; border-radius: 6px;
+  padding: 8px 10px; font-size: 13px; line-height: 1.6; color: var(--text); outline: none; resize: vertical; min-height: 72px; font-family: inherit; }
+.cd-summary-edit textarea:focus { border-color: var(--primary); }
+.cd-summary-edit-foot { display: flex; justify-content: flex-end; margin-top: 6px; }
 </style>
 </head>
 
@@ -1749,41 +1840,166 @@ body {
 
     <!-- ===== AI知识库 ===== -->
     <div id="page-knowledge" class="page">
-      <div class="kb-wrap">
-        <aside class="kb-aside">
-          <div class="kb-group">
-            <div class="kb-group-head" onclick="kbToggleGroup('text')">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#1a73e8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-              <span class="kb-group-name">文本知识库</span>
-              <svg class="kb-caret" id="kbCaretText" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-            </div>
-            <div class="kb-cats" id="kbCatsText"></div>
+      <div class="kb-tabs">
+        <button class="kb-tab active" data-kbtab="base" onclick="kbSwitchTab('base')">基础信息</button>
+        <button class="kb-tab" data-kbtab="qa" onclick="kbSwitchTab('qa')">问题列表</button>
+        <button class="kb-tab" data-kbtab="kb" onclick="kbSwitchTab('kb')">知识库</button>
+      </div>
+
+      <!-- 页签：基础信息 -->
+      <div class="kb-pane" id="kbPaneBase">
+        <div class="kb-base-card">
+          <div class="kb-base-title">基础信息</div>
+          <div class="kb-base-row">
+            <label class="kb-base-label"><span class="req">*</span>AI欢迎词</label>
+            <input type="text" id="kbWelcome" class="kb-base-input" value="您好，我是云居管家AI助手，有什么可以帮您的吗？">
           </div>
-          <div class="kb-group">
-            <div class="kb-group-head" onclick="kbToggleGroup('voice')">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#1a73e8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
-              <span class="kb-group-name">语音知识库</span>
-              <svg class="kb-caret" id="kbCaretVoice" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-            </div>
-            <div class="kb-cats" id="kbCatsVoice"><div class="kb-empty">暂无数据</div></div>
-          </div>
-        </aside>
-        <section class="kb-main">
-          <div class="kb-toolbar">
-            <span class="kb-cur-name" id="kbCurName">测试</span>
-            <div class="kb-tools">
-              <div class="kb-search-box">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                <input type="text" id="kbSearch" placeholder="输入问题关键字模糊搜索" oninput="kbRender()">
+          <div class="kb-base-row">
+            <label class="kb-base-label">AI头像</label>
+            <div class="kb-avatar-row">
+              <div class="kb-avatar-preview" id="kbAiAvatarPreview">
+                <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="8" width="16" height="12" rx="2"/><path d="M12 8V4"/><circle cx="9" cy="14" r="1" fill="#fff"/><circle cx="15" cy="14" r="1" fill="#fff"/></svg>
               </div>
-              <button class="tk-btn" onclick="document.getElementById('kbImportFile').click()">导入</button>
-              <button class="tk-btn" onclick="kbExport()">导出</button>
-              <button class="tk-btn primary" onclick="kbOpenEdit(null)">＋ 新增</button>
-              <input type="file" id="kbImportFile" accept=".json,application/json" style="display:none" onchange="kbImport(event)">
+              <button class="kb-avatar-add" onclick="kbAvatarPick('ai')"><span>＋</span></button>
+              <button class="kb-avatar-del" onclick="kbAvatarDel('ai')" title="删除">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+              </button>
             </div>
           </div>
-          <div class="kb-grid" id="kbGrid"></div>
-        </section>
+          <div class="kb-base-row">
+            <label class="kb-base-label">客户头像</label>
+            <div class="kb-avatar-row">
+              <div class="kb-avatar-preview" id="kbCustAvatarPreview" style="background:linear-gradient(135deg,#6366f1,#8b5cf6);">
+                <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              </div>
+              <button class="kb-avatar-add" onclick="kbAvatarPick('cust')"><span>＋</span></button>
+              <button class="kb-avatar-del" onclick="kbAvatarDel('cust')" title="删除">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+              </button>
+            </div>
+          </div>
+          <div class="kb-base-note">支持上传jpg/jpg，分辨率不低于36x36像素，请确保图片为正方形(1:1)，以免裁剪变形</div>
+          <div class="kb-base-foot">
+            <button class="tk-btn primary" onclick="kbSaveBase()">保存</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 页签：问题列表 -->
+      <div class="kb-pane" id="kbPaneQa" style="display:none;">
+        <div class="kb-qa-toolbar">
+          <div class="kb-qa-left">
+            <span class="kb-qa-label">问题类型</span>
+            <select id="kbQaTypeFilter" onchange="kbQaRender()">
+              <option value="all">请选择问题类型</option>
+              <option value="猜你想问">猜你想问</option>
+              <option value="政策信息">政策信息</option>
+            </select>
+            <button class="tk-btn primary" onclick="kbQaRender()">搜索</button>
+          </div>
+          <button class="tk-btn primary" onclick="kbQaOpenEdit(null)">＋ 新增</button>
+        </div>
+        <div class="kb-qa-table-wrap">
+          <table class="kb-qa-table">
+            <thead>
+              <tr>
+                <th style="width:38%;">问题名称</th>
+                <th style="width:22%;">问题类型</th>
+                <th style="width:18%;">问题图标</th>
+                <th style="width:22%;">操作</th>
+              </tr>
+            </thead>
+            <tbody id="kbQaTbody"></tbody>
+          </table>
+        </div>
+        <div class="kb-qa-pager" id="kbQaPager"></div>
+      </div>
+
+      <!-- 页签：知识库（原有分类树+问答卡片） -->
+      <div class="kb-pane" id="kbPaneKb" style="display:none;">
+        <div class="kb-wrap">
+          <aside class="kb-aside">
+            <div class="kb-group">
+              <div class="kb-group-head" onclick="kbToggleGroup('text')">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#1a73e8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                <span class="kb-group-name">文本知识库</span>
+                <svg class="kb-caret" id="kbCaretText" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+              </div>
+              <div class="kb-cats" id="kbCatsText"></div>
+            </div>
+            <div class="kb-group">
+              <div class="kb-group-head" onclick="kbToggleGroup('voice')">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#1a73e8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
+                <span class="kb-group-name">语音知识库</span>
+                <svg class="kb-caret" id="kbCaretVoice" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+              </div>
+              <div class="kb-cats" id="kbCatsVoice"><div class="kb-empty">暂无数据</div></div>
+            </div>
+          </aside>
+          <section class="kb-main">
+            <div class="kb-toolbar">
+              <span class="kb-cur-name" id="kbCurName">测试</span>
+              <div class="kb-tools">
+                <div class="kb-search-box">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                  <input type="text" id="kbSearch" placeholder="输入问题关键字模糊搜索" oninput="kbRender()">
+                </div>
+                <button class="tk-btn" onclick="document.getElementById('kbImportFile').click()">导入</button>
+                <button class="tk-btn" onclick="kbExport()">导出</button>
+                <button class="tk-btn primary" onclick="kbOpenEdit(null)">＋ 新增</button>
+                <input type="file" id="kbImportFile" accept=".json,application/json" style="display:none" onchange="kbImport(event)">
+              </div>
+            </div>
+            <div class="kb-grid" id="kbGrid"></div>
+          </section>
+        </div>
+      </div>
+    </div>
+
+    <!-- AI 助手：编辑问题抽屉 -->
+    <div id="kbQaEditOverlay" class="kb-overlay" style="display:none;">
+      <div class="kb-qa-edit-drawer">
+        <div class="kb-qa-edit-head">
+          <span id="kbQaEditTitle">编辑问题</span>
+          <span class="lf-modal-close" onclick="kbQaCloseEdit()">&#10005;</span>
+        </div>
+        <div class="kb-qa-edit-body">
+          <div class="kb-qa-edit-row">
+            <label><span class="req">*</span>问题名称</label>
+            <input type="text" id="kbQaName" placeholder="请输入问题名称">
+          </div>
+          <div class="kb-qa-edit-row">
+            <label><span class="req">*</span>问题类型</label>
+            <select id="kbQaType">
+              <option value="猜你想问">猜你想问</option>
+              <option value="政策信息">政策信息</option>
+            </select>
+          </div>
+          <div class="kb-qa-edit-row">
+            <label><span class="req">*</span>问题图标</label>
+            <div class="kb-avatar-row">
+              <div class="kb-avatar-preview" id="kbQaIconPreview" style="background:linear-gradient(135deg,#3b82f6,#60a5fa);">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h.01a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h.01a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v.01a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+              </div>
+              <button class="kb-avatar-add" onclick="kbQaIconPick()"><span>＋</span></button>
+              <button class="kb-avatar-del" onclick="kbQaIconDel()" title="删除">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+              </button>
+            </div>
+          </div>
+          <div class="kb-qa-edit-row">
+            <label>问题排序</label>
+            <div class="kb-sort-row">
+              <button class="kb-sort-btn" onclick="kbQaSort(-1)">−</button>
+              <input type="number" id="kbQaSort" value="6" min="0">
+              <button class="kb-sort-btn" onclick="kbQaSort(1)">＋</button>
+            </div>
+          </div>
+        </div>
+        <div class="kb-qa-edit-foot">
+          <button class="lf-foot-cancel" onclick="kbQaCloseEdit()">取消</button>
+          <button class="lf-foot-ok" onclick="kbQaSave()">保存</button>
+        </div>
       </div>
     </div>
 
@@ -1948,6 +2164,21 @@ body {
         <div class="lc-order-foot">
           <button class="lf-foot-cancel" onclick="lcCancelOrder()">取消</button>
           <button class="lf-foot-ok" onclick="lcSaveOrder()">保存</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 咨询通话详情抽屉（非工单类通话结束后右侧滑出） -->
+    <div id="lcConsultOverlay" class="lc-consult-overlay" style="display:none;">
+      <div class="lc-consult-drawer">
+        <div class="lc-consult-head">
+          <div class="lc-consult-title">咨询通话详情 <span class="lc-order-ai">AI 已分析通话内容</span></div>
+          <span class="lf-modal-close" onclick="lcCloseConsult()">&#10005;</span>
+        </div>
+        <div class="lc-consult-body" id="lcConsultBody"></div>
+        <div class="lc-consult-foot">
+          <button class="lf-foot-cancel" onclick="lcCloseConsult()">关闭</button>
+          <button class="lf-foot-ok" onclick="lcCloseConsult()">完成</button>
         </div>
       </div>
     </div>
@@ -2747,12 +2978,15 @@ function retrieveLatestPark() {
 function renderAgentZone() {
   const el = document.getElementById('agentZone');
   if (!el) return;
+  const consultBtn = '<button class="signin-btn" style="background:#fff;color:var(--primary);border:1px solid var(--primary);" onclick="lcStartConsultCall()" title="模拟非工单类咨询通话（位置/房价/预订）">模拟咨询</button>';
   if (!state.signedIn) {
-    el.innerHTML = '<button class="signin-btn" onclick="lcStartCall()" title="模拟外线来电通话">模拟通话</button>' +
+    el.innerHTML = consultBtn +
+      '<button class="signin-btn" onclick="lcStartCall()" title="模拟外线来电通话">模拟通话</button>' +
       '<span style="font-size:12px;color:var(--text-muted);white-space:nowrap;">未签入，无法接听来电</span>' +
       '<button class="signin-btn" onclick="openSignIn()">IP签入</button>';
   } else {
-    el.innerHTML = '<button class="signin-btn" onclick="lcStartCall()" title="模拟外线来电通话">模拟通话</button>' +
+    el.innerHTML = consultBtn +
+      '<button class="signin-btn" onclick="lcStartCall()" title="模拟外线来电通话">模拟通话</button>' +
       '<div class="agent-card">' +
         '<span class="agent-id">工号 0001</span><span>分机 8333333</span><span>|</span><span>房务中心</span>' +
       '</div>' +
@@ -5322,19 +5556,153 @@ const kbState = {
   curGroup: 'text',
   curCatId: 1,
   editId: null,
-  deleteId: null
+  deleteId: null,
+  curTab: 'base'
 };
 
 function kbInit() {
   if (!kbState.data) kbState.data = kbSeed();
   kbRenderCats();
   kbRender();
+  kbQaInit();
 }
 
 function kbOnShow() {
   if (!kbState.data) kbState.data = kbSeed();
   kbRenderCats();
   kbRender();
+  kbQaRender();
+  kbSwitchTab(kbState.curTab || 'base');
+}
+
+// ===== 三页签切换 =====
+function kbSwitchTab(tab) {
+  kbState.curTab = tab;
+  document.querySelectorAll('.kb-tab').forEach(t => t.classList.toggle('active', t.dataset.kbtab === tab));
+  document.getElementById('kbPaneBase').style.display = tab === 'base' ? 'flex' : 'none';
+  document.getElementById('kbPaneQa').style.display = tab === 'qa' ? 'flex' : 'none';
+  document.getElementById('kbPaneKb').style.display = tab === 'kb' ? 'flex' : 'none';
+}
+
+// ===== 基础信息 =====
+function kbSaveBase() {
+  const welcome = document.getElementById('kbWelcome').value.trim();
+  if (!welcome) { showToast('请填写 AI 欢迎词'); return; }
+  showToast('基础信息已保存');
+}
+
+function kbAvatarPick(kind) {
+  showToast('原型演示：请选择图片上传');
+}
+
+function kbAvatarDel(kind) {
+  showToast('原型演示：已删除头像');
+}
+
+// ===== 问题列表（猜你想问 / 政策信息） =====
+const KB_QA_TYPES = ['猜你想问', '政策信息'];
+const KB_QA_ICONS = {
+  '设施政策': 'linear-gradient(135deg,#3b82f6,#60a5fa)',
+  '服务政策': 'linear-gradient(135deg,#3b82f6,#818cf8)',
+  '宠物政策': 'linear-gradient(135deg,#10b981,#34d399)',
+  '餐饮信息': 'linear-gradient(135deg,#f59e0b,#fbbf24)',
+  '入离政策': 'linear-gradient(135deg,#10b981,#6ee7b7)'
+};
+let kbQaState = { list: [], page: 1, pageSize: 20, filterType: 'all', editingId: null };
+
+function kbQaInit() {
+  if (kbQaState.list.length) return;
+  kbQaState.list = [
+    { id: 1, name: '早餐时间是几点到几点？', type: '猜你想问', icon: '', sort: 1 },
+    { id: 2, name: '酒店有停车场吗？', type: '猜你想问', icon: '', sort: 2 },
+    { id: 3, name: '健身房开放时间是几点？', type: '猜你想问', icon: '', sort: 3 },
+    { id: 4, name: '最晚退房时间是几点？', type: '猜你想问', icon: '', sort: 4 },
+    { id: 5, name: '退房后可以寄存行李吗？', type: '猜你想问', icon: '', sort: 5 },
+    { id: 6, name: '设施政策', type: '政策信息', icon: '⚙', sort: 6 },
+    { id: 7, name: '服务政策', type: '政策信息', icon: '❤', sort: 7 },
+    { id: 8, name: '宠物政策', type: '政策信息', icon: '🐾', sort: 8 },
+    { id: 9, name: '餐饮信息', type: '政策信息', icon: '🍴', sort: 9 },
+    { id: 10, name: '入离政策', type: '政策信息', icon: '🏨', sort: 10 }
+  ];
+}
+
+function kbQaRender() {
+  kbQaState.filterType = document.getElementById('kbQaTypeFilter').value;
+  const rows = kbQaState.list.filter(x => kbQaState.filterType === 'all' || x.type === kbQaState.filterType);
+  const total = rows.length;
+  const pages = Math.max(1, Math.ceil(total / kbQaState.pageSize));
+  if (kbQaState.page > pages) kbQaState.page = pages;
+  const start = (kbQaState.page - 1) * kbQaState.pageSize;
+  const pageRows = rows.slice(start, start + kbQaState.pageSize);
+  document.getElementById('kbQaTbody').innerHTML = pageRows.length ? pageRows.map(r =>
+    '<tr>' +
+      '<td>' + lfEsc(r.name) + '</td>' +
+      '<td>' + lfEsc(r.type) + '</td>' +
+      '<td>' + (r.icon ? '<span class="kb-qa-icon" style="background:' + (KB_QA_ICONS[r.name] || 'linear-gradient(135deg,#3b82f6,#60a5fa)') + ';font-size:16px;">' + r.icon + '</span>' : '<span style="color:var(--text-muted);">—</span>') + '</td>' +
+      '<td><span class="kb-qa-op-edit" onclick="kbQaOpenEdit(' + r.id + ')">编辑</span>' +
+      '<span class="kb-qa-op-del" onclick="kbQaDel(' + r.id + ')">删除</span></td>' +
+    '</tr>').join('') :
+    '<tr><td colspan="4" style="color:var(--text-muted);padding:30px 0;">暂无数据</td></tr>';
+  // 分页
+  let pager = '共 ' + total + ' 条 <select onchange="kbQaState.pageSize=parseInt(this.value,10);kbQaState.page=1;kbQaRender()" style="padding:3px 6px;border:1px solid var(--border);border-radius:4px;font-size:12px;"><option>20条/页</option><option>50条/页</option></select>';
+  pager += ' <button ' + (kbQaState.page <= 1 ? 'disabled' : '') + ' onclick="kbQaState.page--;kbQaRender()">上一页</button>';
+  for (let i = 1; i <= pages; i++) pager += ' <button class="' + (i === kbQaState.page ? 'cur' : '') + '" onclick="kbQaState.page=' + i + ';kbQaRender()">' + i + '</button>';
+  pager += ' <button ' + (kbQaState.page >= pages ? 'disabled' : '') + ' onclick="kbQaState.page++;kbQaRender()">下一页</button>';
+  pager += ' 前往 <input type="number" value="' + kbQaState.page + '" min="1" max="' + pages + '" style="width:44px;padding:3px 4px;border:1px solid var(--border);border-radius:4px;font-size:12px;text-align:center;" onchange="var p=parseInt(this.value,10);if(p>=1&&p<=' + pages + '){kbQaState.page=p;kbQaRender();}"> 页';
+  document.getElementById('kbQaPager').innerHTML = pager;
+}
+
+function kbQaOpenEdit(id) {
+  kbQaState.editingId = id;
+  document.getElementById('kbQaEditTitle').textContent = id ? '编辑问题' : '新增问题';
+  const r = id ? kbQaState.list.find(x => x.id === id) : null;
+  document.getElementById('kbQaName').value = r ? r.name : '';
+  document.getElementById('kbQaType').value = r ? r.type : '猜你想问';
+  document.getElementById('kbQaSort').value = r ? r.sort : (kbQaState.list.length + 1);
+  document.getElementById('kbQaEditOverlay').style.display = 'block';
+}
+
+function kbQaCloseEdit() {
+  document.getElementById('kbQaEditOverlay').style.display = 'none';
+}
+
+function kbQaSort(d) {
+  const el = document.getElementById('kbQaSort');
+  el.value = Math.max(0, (parseInt(el.value, 10) || 0) + d);
+}
+
+function kbQaIconPick() { showToast('原型演示：请选择图标图片上传'); }
+function kbQaIconDel() { showToast('原型演示：已删除图标'); }
+
+function kbQaSave() {
+  const name = document.getElementById('kbQaName').value.trim();
+  if (!name) { showToast('请填写问题名称'); return; }
+  const type = document.getElementById('kbQaType').value;
+  const sort = parseInt(document.getElementById('kbQaSort').value, 10) || 0;
+  if (kbQaState.editingId) {
+    const r = kbQaState.list.find(x => x.id === kbQaState.editingId);
+    if (r) { r.name = name; r.type = type; r.sort = sort; }
+  } else {
+    const nextId = kbQaState.list.reduce((m, x) => Math.max(m, x.id), 0) + 1;
+    kbQaState.list.push({ id: nextId, name, type, icon: '', sort });
+  }
+  kbQaCloseEdit();
+  kbQaRender();
+  showToast('问题已保存');
+}
+
+function kbQaDel(id) {
+  const r = kbQaState.list.find(x => x.id === id);
+  if (!r) return;
+  document.getElementById('lfConfirmTitle').textContent = '删除问题';
+  document.getElementById('lfConfirmMsg').textContent = '确认删除问题「' + r.name + '」吗？删除后不可恢复。';
+  document.getElementById('lfConfirmOk').onclick = function () {
+    kbQaState.list = kbQaState.list.filter(x => x.id !== id);
+    document.getElementById('lfConfirmOverlay').style.display = 'none';
+    kbQaRender();
+    showToast('已删除');
+  };
+  document.getElementById('lfConfirmOverlay').style.display = 'flex';
 }
 
 function kbCurCat() {
@@ -5889,7 +6257,7 @@ function crOpenDetail(id) {
 }
 
 // 通话详情内容渲染（可复用：通话记录详情弹窗 / 人工通话工单抽屉"查看通话详情"）
-function crDetailHtml(c) {
+function crDetailHtml(c, editable) {
   const dir = c.caller.length > 6 ? '呼入' : '呼出';
   const line = c.biz === '内部呼叫' ? '内线' : '外线';
   const guest = c.room ? '住店客人' : '外线客人';
@@ -5902,6 +6270,17 @@ function crDetailHtml(c) {
   const totalSec = crDurationSec(c.duration);
   const aiNo = '059188887777';
   const item = (k, v, hl) => '<div class="cd-item"><span class="k">' + k + '</span><span class="v' + (hl ? ' hl' : '') + '">' + v + '</span></div>';
+  // 内容概要：可编辑模式下渲染为高亮 textarea + 保存按钮
+  let summaryHtml;
+  if (editable) {
+    summaryHtml = '<div class="cd-summary-edit">' +
+      '<div class="cd-summary-edit-label">AI 内容概要（可修改后保存）</div>' +
+      '<textarea id="cdSummaryText" oninput="cdSummaryDirty=true">' + lfEsc(c.detail) + '</textarea>' +
+      '<div class="cd-summary-edit-foot"><button class="cr-btn primary" onclick="lcSaveSummary()">保存概要</button></div>' +
+    '</div>';
+  } else {
+    summaryHtml = '<div class="cd-label-row"><span class="k">内容概要</span><span class="v long">' + lfEsc(c.detail) + '</span></div>';
+  }
   return (
     '<div class="cd-head">' +
       '<div class="cd-title">通话记录详情 <span class="cd-no">#' + no + '</span></div>' +
@@ -5920,7 +6299,7 @@ function crDetailHtml(c) {
         '<span class="cd-tag' + (c.order === '有客需单' ? ' has' : '') + '">' + c.order + '</span>' +
       '</div>' +
       '<div class="cd-label-row"><span class="k">诉求分类</span><span class="v">' + lfEsc(c.category) + '</span></div>' +
-      '<div class="cd-label-row"><span class="k">内容概要</span><span class="v long">' + lfEsc(c.detail) + '</span></div>' +
+      summaryHtml +
     '</div>' +
     '<div class="cd-sec">' +
       '<div class="cd-sec-head">' +
@@ -6148,16 +6527,23 @@ function lcBeginCountdown() {
   }, 1000);
 }
 
-// 手动挂断（通话中）→ 通话结束，进入倒计时
+// 手动挂断（通话中）→ 咨询模式直接出详情；工单模式进入倒计时
 function lcHangup() {
   clearInterval(lcDialogTimer);
   lcDialogTimer = null;
   if (!lcState.busy) return;
+  if (lcConsultMode) {
+    lcState.busy = false;
+    document.getElementById('lcCallOverlay').style.display = 'none';
+    lcOpenConsultDetail();
+    showToast('咨询通话已结束');
+    return;
+  }
   lcBeginCountdown();
   showToast('通话已挂断，10 秒后自动生成工单');
 }
 
-// 结束通话：关闭通话弹窗 → 展示任务工单窗口（右侧抽屉）
+// 结束通话：关闭通话弹窗 → 展示任务工单窗口（右侧抽屉）；咨询模式不弹工单
 function lcEndCall() {
   clearInterval(lcDialogTimer);
   lcDialogTimer = null;
@@ -6165,6 +6551,10 @@ function lcEndCall() {
   lcCountTimer = null;
   lcState.busy = false;
   document.getElementById('lcCallOverlay').style.display = 'none';
+  if (lcConsultMode) {
+    lcOpenConsultDetail();
+    return;
+  }
   lcOpenOrder();
 }
 
@@ -6261,18 +6651,107 @@ function lcDelRow(idx) {
   lcRenderRows();
 }
 
-// ===== 查看通话详情（工单抽屉左侧展开，复用 crDetailHtml 渲染） =====
+// ===== 查看通话详情（工单抽屉左侧展开，复用 crDetailHtml 渲染；概要可编辑保存） =====
 function lcOpenCallDetail() {
   const mock = Object.assign({}, LC_CALL_MOCK);
   const now = lfNow();
   mock.date = now.slice(0, 10);
   mock.time = now.slice(11, 16);
-  document.getElementById('lcCallDetailBody').innerHTML = crDetailHtml(mock);
+  lcEditingMock = mock;
+  document.getElementById('lcCallDetailBody').innerHTML = crDetailHtml(mock, true);
   document.getElementById('lcCallDetailPanel').classList.add('open');
 }
 
 function lcCloseCallDetail() {
   document.getElementById('lcCallDetailPanel').classList.remove('open');
+}
+
+// 保存概要（可编辑模式通用）
+function lcSaveSummary() {
+  const ta = document.getElementById('cdSummaryText');
+  if (!ta) return;
+  const v = ta.value.trim();
+  if (lcEditingMock) lcEditingMock.detail = v;
+  cdSummaryDirty = false;
+  showToast('通话内容概要已保存');
+}
+
+// ===== 咨询通话（非工单类：位置/房价/预订咨询） =====
+const LC_CONSULT_DIALOG = [
+  { who: 'ai', text: '您好，这里是中远宾馆前台小助手，请问有什么可以帮您？' },
+  { who: 'guest', text: '你好，我想咨询一下酒店的具体位置，还有标准间现在的房价是多少？最近还有空房吗？' },
+  { who: 'ai', text: '好的，为您解答：我们酒店位于福州市鼓楼区五一北路 88 号，毗邻三坊七巷景区，步行约 10 分钟；标准间平日房价 468 元/晚，目前未来三天（10 月 30 日—11 月 1 日）各有少量空房可预订。' },
+  { who: 'guest', text: '好的明白了，那我考虑一下再联系你们。' },
+  { who: 'ai', text: '好的，感谢来电，如有需要欢迎随时拨打前台电话，再见。' }
+];
+const LC_CONSULT_MOCK = {
+  id: 88, date: '', time: '', category: '咨询类', summary: '酒店位置与房价咨询', emotion: 'normal',
+  room: '', order: '无客需单', caller: '139****6688', callee: '8188', status: '主叫挂机',
+  answer: '人工接听', duration: '1分45秒', biz: '外线客服托管',
+  detail: '客人来电咨询酒店具体位置（福州市鼓楼区五一北路88号，毗邻三坊七巷）、标准间当前房价（平日468元/晚）及未来三天空房情况；已告知相关信息，客人表示考虑后再联系预订。'
+};
+let lcEditingMock = null;
+let cdSummaryDirty = false;
+let lcConsultMode = false;
+let lcConsultTimer = null;
+
+function lcStartConsultCall() {
+  if (lcState.busy) { showToast('当前已有通话进行中'); return; }
+  lcConsultMode = true;
+  lcAutoDone = true;
+  clearTimeout(lcAutoTimer);
+  lcState.busy = true;
+  document.getElementById('lcCallChat').innerHTML = '';
+  document.getElementById('lcCallEndBtn').style.display = 'none';
+  const tip = document.getElementById('lcCallTip');
+  tip.style.display = '';
+  tip.textContent = '通话中 · 咨询酒店位置/房价/预订情况';
+  document.getElementById('lcCallOverlay').style.display = 'flex';
+  lcDialogIdx = 0;
+  clearInterval(lcDialogTimer);
+  lcDialogTimer = setInterval(lcPlayConsultStep, 950);
+  lcPlayConsultStep();
+  showToast('模拟咨询来电：已进入实时通话');
+}
+
+function lcPlayConsultStep() {
+  if (lcDialogIdx >= LC_CONSULT_DIALOG.length) {
+    clearInterval(lcDialogTimer);
+    lcDialogTimer = null;
+    // 咨询通话结束：不弹工单，直接滑出通话详情（概要可编辑）
+    lcConsultTimer = setTimeout(function () {
+      document.getElementById('lcCallOverlay').style.display = 'none';
+      lcState.busy = false;
+      lcOpenConsultDetail();
+    }, 600);
+    return;
+  }
+  const d = LC_CONSULT_DIALOG[lcDialogIdx++];
+  const chat = document.getElementById('lcCallChat');
+  const div = document.createElement('div');
+  div.className = 'lc-call-msg ' + d.who;
+  div.innerHTML = '<div class="lc-call-who">' + (d.who === 'ai' ? '前台小助手' : '咨询客人') + '</div>' + lfEsc(d.text);
+  chat.appendChild(div);
+  chat.scrollTop = chat.scrollHeight;
+}
+
+function lcOpenConsultDetail() {
+  const mock = Object.assign({}, LC_CONSULT_MOCK);
+  const now = lfNow();
+  mock.date = now.slice(0, 10);
+  mock.time = now.slice(11, 16);
+  lcEditingMock = mock;
+  document.getElementById('lcConsultBody').innerHTML = crDetailHtml(mock, true);
+  document.getElementById('lcConsultOverlay').style.display = 'flex';
+}
+
+function lcCloseConsult() {
+  if (cdSummaryDirty) {
+    // 未保存关闭前提示
+    lcSaveSummary();
+  }
+  document.getElementById('lcConsultOverlay').style.display = 'none';
+  lcConsultMode = false;
 }
 
 // ===== 保存：生成任务工单并写入任务中心 =====
